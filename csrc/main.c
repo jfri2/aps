@@ -1,7 +1,4 @@
-#include <unistd.h>				//Needed for I2C port
-#include <fcntl.h>				//Needed for I2C port
-#include <sys/ioctl.h>			//Needed for I2C port
-#include <linux/i2c-dev.h>		//Needed for I2C port
+#include "i2c.h"
 #include <stdio.h>
 #include <errno.h>
 #include <wiringPi.h>
@@ -21,22 +18,16 @@ void waterPlants(int32_t pump, int32_t wateringTime);
 void get_time(void);
 void log_header(uint8_t *header);
 void log_event(uint8_t *event);
-void i2c_init(void);
-void i2c_get_bus(int32_t addr);
-void i2c_write(uint8_t *buffer, int32_t length);
-void i2c_read(uint8_t *buffer, int32_t length);
 void shtc3_init(void);
 void shtc3_getData(float *temperature, float *humidity);
 void soilsensor_init(int32_t addr);
 uint16_t soilsensor_getData(int32_t addr);
 
 // Global Variables
-extern int errno;
-int32_t errnum;
+//extern int errno;
+FILE *logfile;
 uint8_t time_string[20];
 uint8_t log_message[100];
-int32_t file_i2c;
-FILE *logfile;
 uint8_t *logfilepath = "./sensor_data.csv";
 uint8_t *pump1path = "./pumps/pump1.txt";
 uint8_t *pump2path = "./pumps/pump2.txt";
@@ -419,44 +410,6 @@ void log_event(uint8_t *event)
     logfile = fopen(logfilepath, "a");
     fprintf(logfile, "%s,%s\n", time_string, event);
     fclose(logfile);
-}
-
-void i2c_init(void)
-{
-    uint8_t *filename = (uint8_t*)"/dev/i2c-1";
-    if ((file_i2c = open(filename, O_RDWR)) < 0)
-    {
-        printf("Failed to open the i2c bus\n");
-        errnum = errno;
-        fprintf(stderr, "Value of errno: %d\n", errno);
-        perror("Error printed by perror");
-        fprintf(stderr, "Error opening file: %s\n", strerror(errnum));
-    }
-}
-
-void i2c_get_bus(int32_t addr)
-{
-    if (ioctl(file_i2c, I2C_SLAVE, addr) < 0)
-    {
-        printf("Failed to acquire bus access and/or talk to slave.\n");
-    }
-}
-
-void i2c_write(uint8_t *buffer, int32_t length)
-{
-    if (write(file_i2c, buffer, length) != length)
-    {
-        printf("Failed to write to i2c device\n");
-    }
-}
-
-void i2c_read(uint8_t *buffer, int32_t length)
-{
-    int32_t bytes_read = read(file_i2c, buffer, length);
-    if (bytes_read != length)
-    {
-        printf("Failed to read from i2c device, expected %d bytes, got %d bytes\n", length, bytes_read);
-    }
 }
 
 void shtc3_init(void)
