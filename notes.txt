@@ -1,0 +1,62 @@
+===
+
+This project is setup to auto-run on boot with systemd. 
+systemd services in /lib/systemd/system are defined as follows:
+
+aps.service:
+[Unit]
+Description=APS
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/share/aps/CamMonitor_Debug/start.sh
+
+[Install]
+WantedBy=multi-user.target
+
+aps2.service:
+[Unit]
+Description=APS2
+After=multi-user.target
+
+[Service]
+Type=idle
+WorkingDirectory=/share/aps/csrc
+ExecStart=/share/aps/csrc/aps
+
+[Install]
+WantedBy=multi-user.target
+
+===
+
+Nginx is used as the webserver for this stuff, config is as follows: 
+XYZ is defined in the actual file but not in these public notes
+
+server {
+    listen XYZ default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+
+    # SSL Stuff
+    ssl on;
+    ssl_certificate /XYZ/server.crt;
+    ssl_certificate_key /XYZ/server.key;
+
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:5000/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        #try_files $uri $uri/ =404;
+        #proxy_redirect / /;
+        auth_basic "Gemma Website";
+        auth_basic_user_file /XYZ/.htpasswd;
+    }
+}
+
+===
