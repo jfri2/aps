@@ -2,6 +2,7 @@
 !*/
 !*.*
 *.csv
+*.workspace.code-workspace
 data.json
 
 # Prerequisites

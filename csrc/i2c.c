@@ -3,7 +3,6 @@
 
 // Variables
 int32_t file_i2c;
-
 int32_t errnum;
 
 // Function Definitions

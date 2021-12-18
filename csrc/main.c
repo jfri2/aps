@@ -1,4 +1,6 @@
 #include "i2c.h"
+#include "aps_time.h"
+#include "logger.h"
 #include <stdio.h>
 #include <errno.h>
 #include <wiringPi.h>
@@ -8,16 +10,20 @@
 #include <string.h>
 #include <math.h>
 
+// Macros
+#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
 // Function declarations
+int32_t comp(const void* elem1, const void *elem2);
+int32_t compf(const void* elem1, const void *elem2);
+float fta(int32_t* samples, uint32_t len);
+float ftaf(float* samples, uint32_t len);
 void resetManualWateringPump1(void);
 void resetManualWateringPump2(void);
 void resetManualWateringPump3(void);
 void resetPumps(void);
 void testPumps(void);
 void waterPlants(int32_t pump, int32_t wateringTime);
-void get_time(void);
-void log_header(uint8_t *header);
-void log_event(uint8_t *event);
 void shtc3_init(void);
 void shtc3_getData(float *temperature, float *humidity);
 void soilsensor_init(int32_t addr);
@@ -25,10 +31,6 @@ uint16_t soilsensor_getData(int32_t addr);
 
 // Global Variables
 //extern int errno;
-FILE *logfile;
-uint8_t time_string[20];
-uint8_t log_message[100];
-uint8_t *logfilepath = "./sensor_data.csv";
 uint8_t *pump1path = "./pumps/pump1.txt";
 uint8_t *pump2path = "./pumps/pump2.txt";
 uint8_t *pump3path = "./pumps/pump3.txt";
@@ -92,6 +94,13 @@ int main(void)
     delay(1000);
     
     log_header("Timestamp,Temp_degC,Temp_degF,RH_percent,Moisture_1,Moisture_2,Moisture_3,WateringEventPump1,WateringEventPump2,WateringEventPump3");
+
+    int32_t test_array[7] = {0, 2000, -1500, 3, 4222, 5, 13};
+    float test_arrayf[7] = {0.1, -45.3, 4222, 41.4, 3, 0, 0.1};
+    float test_array_fta = fta(test_array, COUNT_OF(test_array));
+    float test_arrayf_fta = ftaf(test_arrayf, COUNT_OF(test_arrayf));
+    printf("Test Array: %.2f\n", test_array_fta);
+    printf("Test Arrayf: %.2f\n", test_arrayf_fta);
     
 	while(1)
     {   
@@ -256,6 +265,76 @@ int main(void)
     return (0);
 }
 
+int32_t comp(const void* elem1, const void *elem2)
+{
+    int32_t f = *((int32_t*) elem1);
+    int32_t s = *((int32_t*) elem2);
+    if (f > s) 
+    {
+        return 1;
+    }
+    else if (f < s)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int32_t compf(const void* elem1, const void *elem2)
+{
+    float f = *((float*) elem1);
+    float s = *((float*) elem2);
+    if (f > s) 
+    {
+        return 1;
+    }
+    else if (f < s)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+float fta(int32_t* samples, uint32_t len)
+{
+    uint8_t k = 1;      // Number of values to remove * 2
+    
+    // Sort elements of samples in ascending order
+    qsort(samples, len, sizeof(*samples), comp);
+
+    // Average all elements except k elements from top and bottom of array
+    float avg = 0;
+    for (uint32_t i = k; i < (len - k); i++)
+    {
+        avg += (float)samples[i];
+    }
+    avg = avg / (len - (2 * k));
+    return (avg);
+}
+
+float ftaf(float* samples, uint32_t len)
+{
+    uint8_t k = 1;      // Number of values to remove * 2
+    
+    // Sort elements of samples in ascending order
+    qsort(samples, len, sizeof(*samples), compf);
+
+    // Average all elements except k elements from top and bottom of array
+    float avg = 0;
+    for (uint32_t i = k; i < (len - k); i++)
+    {
+        avg += samples[i];
+    }
+    avg = avg / (len - (2 * k));
+    return (avg);
+}
+
 void resetManualWateringPump1(void)
 {
     pump1File = fopen(pump1path, "w");
@@ -384,32 +463,6 @@ void waterPlants(int32_t pump, int32_t wateringTime)
     delay(wateringTime);
     digitalWrite(pump, LOW);
     resetPumps();
-}
-
-void get_time(void)
-{
-    time_t rawtime;
-    struct tm *timeinfo;
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);    
-    strftime(time_string, 20, "%Y-%m-%d %H:%M:%S", timeinfo);
-}
-
-void log_header(uint8_t *header)
-{
-    printf("%s\n", header);
-    logfile = fopen(logfilepath, "a");
-    fprintf(logfile, "%s\n", header);
-    fclose(logfile);
-}    
-
-void log_event(uint8_t *event)
-{
-    get_time();
-    printf("%s,%s\n", time_string, event);
-    logfile = fopen(logfilepath, "a");
-    fprintf(logfile, "%s,%s\n", time_string, event);
-    fclose(logfile);
 }
 
 void shtc3_init(void)
