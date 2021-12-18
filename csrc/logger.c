@@ -3,11 +3,13 @@
 
 // Variables
 FILE *logfile;
-uint8_t *logfilepath = "./sensor_data.csv";
 
 // Function Definintions
 void log_header(uint8_t *header)
 {
+    uint8_t time_string[20] = {};
+    get_time2(time_string, 20);
+    sprintf(logfilepath, "./data/%s-sensor_data.csv", time_string);
     printf("%s\n", header);
     logfile = fopen(logfilepath, "a");
     fprintf(logfile, "%s\n", header);

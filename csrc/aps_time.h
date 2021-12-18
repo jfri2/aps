@@ -8,7 +8,8 @@
 #include <time.h>
 
 // Function Declarations
-void get_time(uint8_t *time_string, uint8_t time_string_len);
+void get_time(uint8_t *time_string, uint8_t len);
+void get_time2(uint8_t *time_string, uint8_t len);
 
 // Global Variables
 

@@ -9,6 +9,7 @@
 
 // Variables
 uint8_t log_message[100];
+uint8_t logfilepath[100];
 
 // Function Declarations
 void log_header(uint8_t *header);

@@ -13,11 +13,12 @@
 // Macros
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
+// Defines
+#define NUM_SAMPLES 100
+
 // Function declarations
-int32_t comp(const void* elem1, const void *elem2);
-int32_t compf(const void* elem1, const void *elem2);
-float fta(int32_t* samples, uint32_t len);
-float ftaf(float* samples, uint32_t len);
+void get_data(void);
+void apply_fta(void);
 void resetManualWateringPump1(void);
 void resetManualWateringPump2(void);
 void resetManualWateringPump3(void);
@@ -28,6 +29,10 @@ void shtc3_init(void);
 void shtc3_getData(float *temperature, float *humidity);
 void soilsensor_init(int32_t addr);
 uint16_t soilsensor_getData(int32_t addr);
+int32_t comp(const void* elem1, const void *elem2);
+int32_t compf(const void* elem1, const void *elem2);
+float fta(int32_t* samples, uint32_t len, uint32_t k);
+float ftaf(float* samples, uint32_t len, uint32_t k);
 
 // Global Variables
 //extern int errno;
@@ -47,40 +52,45 @@ FILE *testPumpFile;
 uint8_t killSwitch = 0;
 uint8_t testPump = 0;
 
+int32_t soilsensor1_addr = 0x36;
+int32_t soilsensor2_addr = 0x37;
+int32_t soilsensor3_addr = 0x38;
+int32_t soilsensor4_addr = 0x39;
+uint16_t moisture1Threshold = 550;      // Threshold to water plants
+uint16_t moisture2Threshold = 550;      // Threshold to water plants
+uint16_t moisture3Threshold = 550;      // Threshold to water plants
+float temperature[NUM_SAMPLES];
+float humidity[NUM_SAMPLES];
+int32_t moisture1[NUM_SAMPLES];
+int32_t moisture2[NUM_SAMPLES];
+int32_t moisture3[NUM_SAMPLES];
+float temperatureFiltered = 0;
+float temperatureFilteredF = 0;
+float humidityFiltered = 0;
+float moisture1Filtered = 0;
+float moisture2Filtered = 0;
+float moisture3Filtered = 0;
+int8_t wateringEvent1 = 0;
+int8_t wateringEvent2 = 0;
+int8_t wateringEvent3 = 0;    
+int32_t wateringDelay = 120 * 60;   // Seconds
+int32_t wateringTime1 = 20000;      // Milliseconds
+int32_t wateringTime2 = 20000;      // Milliseconds
+int32_t wateringTime3 = 20000;      // Milliseconds
+uint8_t pump1ManualOn = 0;
+uint8_t pump2ManualOn = 0;
+uint8_t pump3ManualOn = 0;        
+
+
 // Main
 int main(void)
 {   
-    float temperature = 0;
-    float temperatureFiltered = 0;
-    float temperatureF = 0;
-    float humidity = 0;
-    float humidityFiltered = 0;
-    int32_t soilsensor1_addr = 0x36;
-    int32_t soilsensor2_addr = 0x37;
-    int32_t soilsensor3_addr = 0x38;
-    int32_t soilsensor4_addr = 0x39;
-    uint16_t moisture1 = 0;
-    uint16_t moisture1Threshold = 550;      // Threshold to water plants
-    uint16_t moisture2 = 0;
-    uint16_t moisture2Threshold = 550;      // Threshold to water plants
-    uint16_t moisture3 = 0;
-    uint16_t moisture3Threshold = 550;      // Threshold to water plants
-    uint32_t samples = 10;
-    uint32_t meas_delay_ms = 60000;    
-    int8_t wateringEvent1 = 0;
-    int8_t wateringEvent2 = 0;
-    int8_t wateringEvent3 = 0;    
-    int32_t wateringDelay = 120 * 60;     // Seconds
-    int32_t wateringTime1 = 20000;      // Milliseconds
-    int32_t wateringTime2 = 20000;      // Milliseconds
-    int32_t wateringTime3 = 20000;      // Milliseconds
-    uint8_t pump1ManualOn = 0;
-    uint8_t pump2ManualOn = 0;
-    uint8_t pump3ManualOn = 0;        
+    int32_t lastMeasurementTime = 0;
+    uint32_t measurementDelayMs = 10000;    // 10 seconds    
     int32_t currentTime = 0;    
     int32_t lastWateringTime1 = time(NULL);
     int32_t lastWateringTime2 = time(NULL);
-    int32_t lastWateringTime3 = time(NULL);    
+    int32_t lastWateringTime3 = time(NULL);   
 
     printf("I2C Comms Start\n");       
     i2c_init();
@@ -94,35 +104,29 @@ int main(void)
     delay(1000);
     
     log_header("Timestamp,Temp_degC,Temp_degF,RH_percent,Moisture_1,Moisture_2,Moisture_3,WateringEventPump1,WateringEventPump2,WateringEventPump3");
-
-    int32_t test_array[7] = {0, 2000, -1500, 3, 4222, 5, 13};
-    float test_arrayf[7] = {0.1, -45.3, 4222, 41.4, 3, 0, 0.1};
-    float test_array_fta = fta(test_array, COUNT_OF(test_array));
-    float test_arrayf_fta = ftaf(test_arrayf, COUNT_OF(test_arrayf));
-    printf("Test Array: %.2f\n", test_array_fta);
-    printf("Test Arrayf: %.2f\n", test_arrayf_fta);
     
 	while(1)
     {   
-        for (uint32_t i = 0; i < samples; i++)
-        {
-            shtc3_getData(&temperature, &humidity); 
-            temperatureFiltered += temperature;
-            humidityFiltered += fabs(humidity);
-            moisture1 += soilsensor_getData(soilsensor1_addr);
-            moisture2 += soilsensor_getData(soilsensor2_addr);
-            moisture3 += soilsensor_getData(soilsensor3_addr); 
-            delay(meas_delay_ms / samples);
+        // Update current time
+        currentTime = time(NULL);
+
+        // Check to see if we need to perform a measurement
+        if (currentTime > (lastMeasurementTime + measurementDelayMs))
+        {   
+            // Sample sensors NUM_SAMPLES times
+            get_data();
+
+            // Apply Fault Tolerant Averaging to samples
+            apply_fta();
+
+            // Convert degrees C to degrees F
+            temperatureFilteredF = temperatureFiltered * 1.8 + 32;   
+
+            // Log sensor data                 
+            sprintf(log_message, "%.1f,%.1f,%.2f,%.0f,%.0f,%.0f,0,0,0", temperatureFiltered, temperatureFilteredF, humidityFiltered, moisture1Filtered, moisture2Filtered, moisture3Filtered);
+            log_event(log_message); 
         }
-        temperatureFiltered = temperatureFiltered / samples;
-        humidityFiltered = humidityFiltered / samples;
-        moisture1 = moisture1 / samples;
-        moisture2 = moisture2 / samples;
-        moisture3 = moisture3 / samples; 
-        temperatureF = temperature * 1.8 + 32;        
-        sprintf(log_message, "%.1f,%.1f,%.2f,%d,%d,%d,0,0,0", temperature, temperatureF, humidity, moisture1, moisture2, moisture3);
-        log_event(log_message);  
-        
+       
         // Check pump files to determine if anything needs watering
         pump1File = fopen(pump1path, "r");
         if (pump1File)
@@ -174,7 +178,6 @@ int main(void)
         fclose(killSwitchFile);           
         
         // Check which plant groups need watering
-        currentTime = time(NULL);
         if (killSwitch == 0)
         {
             // Test Pumps
@@ -198,7 +201,7 @@ int main(void)
             }            
             
             // Normal Watering
-            if (((currentTime > (lastWateringTime1 + wateringDelay)) && ((moisture1 < moisture1Threshold)) || (pump1ManualOn == 1)))
+            if (((currentTime > (lastWateringTime1 + wateringDelay)) && ((moisture1Filtered < moisture1Threshold)) || (pump1ManualOn == 1)))
             {
                 wateringEvent1 = 1;
                 if (pump1ManualOn == 1)
@@ -206,7 +209,7 @@ int main(void)
                     printf("Manual watering of Pump1 plants commanded\n");   
                 }                 
             }  
-            if (((currentTime > (lastWateringTime2 + wateringDelay)) && ((moisture2 < moisture2Threshold)) || (pump2ManualOn == 1)))
+            if (((currentTime > (lastWateringTime2 + wateringDelay)) && ((moisture2Filtered < moisture2Threshold)) || (pump2ManualOn == 1)))
             {
                 wateringEvent2 = 1;
                 if (pump2ManualOn == 1)
@@ -214,7 +217,7 @@ int main(void)
                     printf("Manual watering of Pump2 plants commanded\n");   
                 }                 
             }      
-            if (((currentTime > (lastWateringTime3 + wateringDelay)) && ((moisture3 < moisture3Threshold)) || (pump3ManualOn == 1)))
+            if (((currentTime > (lastWateringTime3 + wateringDelay)) && ((moisture3Filtered < moisture3Threshold)) || (pump3ManualOn == 1)))
             {
                 wateringEvent3 = 1;
                 if (pump3ManualOn == 1)
@@ -226,7 +229,7 @@ int main(void)
             // Water plant groups that need watering
             if (wateringEvent1)
             {
-                sprintf(log_message, "%.1f,%.1f,%.2f,%d,%d,%d,1,0,0", temperature, temperatureF, humidity, moisture1, moisture2, moisture3);
+                sprintf(log_message, "%.1f,%.1f,%.2f,%.0f,%.0f,%.0f,0,0,0", temperatureFiltered, temperatureFilteredF, humidityFiltered, moisture1Filtered, moisture2Filtered, moisture3Filtered);
                 log_event(log_message);  
                 waterPlants(pump1_pin, wateringTime1);
                 lastWateringTime1 = time(NULL);
@@ -234,9 +237,10 @@ int main(void)
                 resetManualWateringPump1();
                 wateringEvent1 = 0;
             }
+
             if (wateringEvent2)
             {
-                sprintf(log_message, "%.1f,%.1f,%.2f,%d,%d,%d,0,1,0", temperature, temperatureF, humidity, moisture1, moisture2, moisture3);
+                sprintf(log_message, "%.1f,%.1f,%.2f,%.0f,%.0f,%.0f,0,0,0", temperatureFiltered, temperatureFilteredF, humidityFiltered, moisture1Filtered, moisture2Filtered, moisture3Filtered);
                 log_event(log_message);  
                 waterPlants(pump2_pin, wateringTime2);
                 lastWateringTime1 = time(NULL);
@@ -244,9 +248,10 @@ int main(void)
                 resetManualWateringPump2();
                 wateringEvent2 = 0;
             }
+            
             if (wateringEvent3)
             {
-                sprintf(log_message, "%.1f,%.1f,%.2f,%d,%d,%d,0,0,1", temperature, temperatureF, humidity, moisture1, moisture2, moisture3);
+                sprintf(log_message, "%.1f,%.1f,%.2f,%.0f,%.0f,%.0f,0,0,0", temperatureFiltered, temperatureFilteredF, humidityFiltered, moisture1Filtered, moisture2Filtered, moisture3Filtered);
                 log_event(log_message);  
                 waterPlants(pump3_pin, wateringTime3);
                 lastWateringTime3 = time(NULL);
@@ -255,84 +260,33 @@ int main(void)
                 wateringEvent3 = 0;
             }
         }
-        
-        temperature = 0;
-        humidityFiltered = 0;
-        moisture1 = 0;
-        moisture2 = 0;
-        moisture3 = 0;      
     }
     return (0);
 }
 
-int32_t comp(const void* elem1, const void *elem2)
+void get_data(void)
 {
-    int32_t f = *((int32_t*) elem1);
-    int32_t s = *((int32_t*) elem2);
-    if (f > s) 
+    for (uint32_t i = 0; i < NUM_SAMPLES; i++)
     {
-        return 1;
-    }
-    else if (f < s)
-    {
-        return -1;
-    }
-    else
-    {
-        return 0;
+        shtc3_getData(&temperature[i], &humidity[i]); 
+        moisture1[i] = (int32_t)soilsensor_getData(soilsensor1_addr);
+        moisture2[i] = (int32_t)soilsensor_getData(soilsensor2_addr);
+        moisture3[i] = (int32_t)soilsensor_getData(soilsensor3_addr);             
+
+        // Uncomment to enable debug for individual measurements
+        // sprintf(log_message, "TEST %.1f,%.1f,%.2f,%d,%d,%d,0,0,0", temperature[i], 0, humidity[i], moisture1[i], moisture2[i], moisture3[i]);
+        // log_event(log_message);            
     }
 }
 
-int32_t compf(const void* elem1, const void *elem2)
+void apply_fta(void)
 {
-    float f = *((float*) elem1);
-    float s = *((float*) elem2);
-    if (f > s) 
-    {
-        return 1;
-    }
-    else if (f < s)
-    {
-        return -1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-float fta(int32_t* samples, uint32_t len)
-{
-    uint8_t k = 1;      // Number of values to remove * 2
-    
-    // Sort elements of samples in ascending order
-    qsort(samples, len, sizeof(*samples), comp);
-
-    // Average all elements except k elements from top and bottom of array
-    float avg = 0;
-    for (uint32_t i = k; i < (len - k); i++)
-    {
-        avg += (float)samples[i];
-    }
-    avg = avg / (len - (2 * k));
-    return (avg);
-}
-
-float ftaf(float* samples, uint32_t len)
-{
-    uint8_t k = 1;      // Number of values to remove * 2
-    
-    // Sort elements of samples in ascending order
-    qsort(samples, len, sizeof(*samples), compf);
-
-    // Average all elements except k elements from top and bottom of array
-    float avg = 0;
-    for (uint32_t i = k; i < (len - k); i++)
-    {
-        avg += samples[i];
-    }
-    avg = avg / (len - (2 * k));
-    return (avg);
+    uint32_t k = (NUM_SAMPLES / 10) + 1;      // Approx 20% of data gets filtered out of average
+    temperatureFiltered = ftaf(temperature, COUNT_OF(temperature), k);
+    humidityFiltered = ftaf(humidity, COUNT_OF(humidity), k);
+    moisture1Filtered = fta((int32_t*)moisture1, COUNT_OF(moisture1), k);
+    moisture2Filtered = fta((int32_t*)moisture2, COUNT_OF(moisture2), k);
+    moisture3Filtered = fta((int32_t*)moisture3, COUNT_OF(moisture3), k);
 }
 
 void resetManualWateringPump1(void)
@@ -558,4 +512,70 @@ uint16_t soilsensor_getData(int32_t addr)
     i2c_read(moisture, 2);
     
     return (((uint16_t)moisture[0] << 8) | moisture[1]);
+}
+
+int32_t comp(const void* elem1, const void *elem2)
+{
+    int32_t f = *((int32_t*) elem1);
+    int32_t s = *((int32_t*) elem2);
+    if (f > s) 
+    {
+        return 1;
+    }
+    else if (f < s)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int32_t compf(const void* elem1, const void *elem2)
+{
+    float f = *((float*) elem1);
+    float s = *((float*) elem2);
+    if (f > s) 
+    {
+        return 1;
+    }
+    else if (f < s)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+float fta(int32_t* samples, uint32_t len, uint32_t k)
+{
+    // Sort elements of samples in ascending order
+    qsort(samples, len, sizeof(*samples), comp);
+
+    // Average all elements except k elements from top and bottom of array
+    float avg = 0;
+    for (uint32_t i = k; i < (len - k); i++)
+    {
+        avg += (float)samples[i];
+    }
+    avg = avg / (len - (2 * k));
+    return (avg);
+}
+
+float ftaf(float* samples, uint32_t len, uint32_t k)
+{
+    // Sort elements of samples in ascending order
+    qsort(samples, len, sizeof(*samples), compf);
+
+    // Average all elements except k elements from top and bottom of array
+    float avg = 0;
+    for (uint32_t i = k; i < (len - k); i++)
+    {
+        avg += samples[i];
+    }
+    avg = avg / (len - (2 * k));
+    return (avg);
 }

@@ -30,12 +30,16 @@ import os
 vs_started = True
 
 # CSV stuff
-csv_path = "/share/aps/csrc/sensor_data.csv"
+def all_files_under(path):
+    for cur_path, dirnames, filenames in os.walk(path):
+        for filename in filenames:
+            yield os.path.join(cur_path, filename)
+csv_path = max(all_files_under('/share/aps/csrc/data/'))
 
 # Emailer
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
-with open('data.json') as jsonfile:
+with open('/share/aps/CamMonitor_Debug/data.json') as jsonfile:
     emails = json.load(jsonfile)
 
 killswitchFilePath = '/share/aps/csrc/pumps/killswitch.txt'
@@ -299,10 +303,11 @@ def video_feed():
         
 @app.route("/getCSV")
 def getCSV():
+    sensor_data_filename = os.path.basename(csv_path)
     with open(csv_path) as csv_fp:
         csv = csv_fp.read()
     return Response(csv, mimetype="text/csv", headers={"Content-disposition":
-                 "attachment; filename=sensor_data.csv"})
+                 "attachment; filename=" + sensor_data_filename})
                  
 @app.route("/KILLSWITCHON")
 def buttonKILLSWITCHON():
