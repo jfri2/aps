@@ -268,6 +268,7 @@ void get_data(void)
     for (uint32_t i = 0; i < NUM_SAMPLES; i++)
     {
         shtc3_getData(&temperature[i], &humidity[i]); 
+        humidity[i] = abs(humidity[i]);
         moisture1[i] = (int32_t)soilsensor_getData(soilsensor1_addr);
         moisture2[i] = (int32_t)soilsensor_getData(soilsensor2_addr);
         moisture3[i] = (int32_t)soilsensor_getData(soilsensor3_addr);             
