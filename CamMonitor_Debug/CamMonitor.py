@@ -34,7 +34,9 @@ def all_files_under(path):
     for cur_path, dirnames, filenames in os.walk(path):
         for filename in filenames:
             yield os.path.join(cur_path, filename)
-csv_path = max(all_files_under('/share/aps/csrc/data/'))
+
+def get_csv_filename():
+    return(max(all_files_under('/share/aps/csrc/data/')))
 
 # Emailer
 SMTP_SERVER = 'smtp.gmail.com'
@@ -52,12 +54,13 @@ def writeToFile(filepath, str):
     f = open(filepath, 'w')
     f.write(str)
     f.close()
+    
 def readFromFile(filepath):
     f = open(filepath, 'r')
     text = f.read()
     f.close()
     return text
-
+    
 class Emailer:
     def sendmail(self, recipient, subject, content):
     
@@ -123,14 +126,14 @@ class Emailer:
 outputFrame = None
 lock = threading.Lock()
 # initialize a flask object
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='/share/aps/CamMonitor_Debug/static')
 # initialize the video stream and allow the camera sensor to
 # warmup
 #vs = VideoStream(usePiCamera=1).start()
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def index():
     # return the rendered template
     # TODO, read files, update variables
@@ -148,24 +151,25 @@ def index():
     info_p11 = ''
     info_p12 = ''
     info_p13 = ''
-    info_time2 = ''
-    info_temp2 = ''
-    info_hum2 = ''
-    info_ss21 = ''
-    info_ss22 = ''
-    info_ss23 = ''
-    info_p21 = ''
-    info_p22 = ''
-    info_p23 = ''    
-    info_time3 = ''
-    info_temp3 = ''
-    info_hum3 = ''
-    info_ss31 = ''
-    info_ss32 = ''
-    info_ss33 = ''
-    info_p31 = ''
-    info_p32 = ''
-    info_p33 = ''       
+    
+    with open(get_csv_filename(), 'rb') as f:
+        try:  # catch OSError in case of a one line file 
+            f.seek(-2, os.SEEK_END)
+            while f.read(1) != b'\n':
+                f.seek(-2, os.SEEK_CUR)
+        except OSError:
+            f.seek(0)
+        sensor_readings = f.readline().decode()    
+        sensor_readings = sensor_readings.split(',')
+        info_time1 = sensor_readings[0]
+        info_temp1 = sensor_readings[2]
+        info_hum1 = sensor_readings[3]
+        info_ss11 = sensor_readings[4]
+        info_ss12 = sensor_readings[5]
+        info_ss13 = sensor_readings[6]
+        info_p11 = sensor_readings[7]
+        info_p12 = sensor_readings[8]
+        info_p13 = sensor_readings[9]             
     
     return render_template("index.html", \
                                 info_killswitchstatus=info_killswitchstatus, \
@@ -181,25 +185,7 @@ def index():
                                 info_ss13=info_ss13, \
                                 info_p11=info_p11, \
                                 info_p12=info_p12, \
-                                info_p13=info_p12, \
-                                info_time2=info_time2, \
-                                info_temp2=info_temp2, \
-                                info_hum2=info_hum2, \
-                                info_ss21=info_ss21, \
-                                info_ss22=info_ss22, \
-                                info_ss23=info_ss23, \
-                                info_p21=info_p21, \
-                                info_p22=info_p22, \
-                                info_p23=info_p23, \
-                                info_time3=info_time3, \
-                                info_temp3=info_temp3, \
-                                info_hum3=info_hum3, \
-                                info_ss31=info_ss31, \
-                                info_ss32=info_ss32, \
-                                info_ss33=info_ss33, \
-                                info_p31=info_p31, \
-                                info_p32=info_p32,\
-                                info_p33=info_p33)
+                                info_p13=info_p12)
         
 def detect_motion(frameCount):
     # grab global references to the video stream, output frame, and
@@ -303,8 +289,8 @@ def video_feed():
         
 @app.route("/getCSV")
 def getCSV():
-    sensor_data_filename = os.path.basename(csv_path)
-    with open(csv_path) as csv_fp:
+    sensor_data_filename = os.path.basename(get_csv_filename())
+    with open(get_csv_filename()) as csv_fp:
         csv = csv_fp.read()
     return Response(csv, mimetype="text/csv", headers={"Content-disposition":
                  "attachment; filename=" + sensor_data_filename})

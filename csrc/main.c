@@ -52,10 +52,10 @@ FILE *testPumpFile;
 uint8_t killSwitch = 0;
 uint8_t testPump = 0;
 
-int32_t soilsensor1_addr = 0x36;
-int32_t soilsensor2_addr = 0x37;
-int32_t soilsensor3_addr = 0x38;
-int32_t soilsensor4_addr = 0x39;
+int32_t soilsensor1_addr = 0x37;
+int32_t soilsensor2_addr = 0x38;
+int32_t soilsensor3_addr = 0x36;
+//int32_t soilsensor4_addr = 0x39;
 uint16_t moisture1Threshold = 550;      // Threshold to water plants
 uint16_t moisture2Threshold = 550;      // Threshold to water plants
 uint16_t moisture3Threshold = 550;      // Threshold to water plants
@@ -79,14 +79,13 @@ int32_t wateringTime2 = 20000;      // Milliseconds
 int32_t wateringTime3 = 20000;      // Milliseconds
 uint8_t pump1ManualOn = 0;
 uint8_t pump2ManualOn = 0;
-uint8_t pump3ManualOn = 0;        
-
+uint8_t pump3ManualOn = 0;       
 
 // Main
 int main(void)
 {   
     int32_t lastMeasurementTime = 0;
-    uint32_t measurementDelayMs = 10000;    // 10 seconds    
+    uint32_t measurementDelayMs = 1000 * 60;    // 60 seconds  
     int32_t currentTime = 0;    
     int32_t lastWateringTime1 = time(NULL);
     int32_t lastWateringTime2 = time(NULL);

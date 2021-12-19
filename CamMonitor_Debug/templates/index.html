@@ -129,7 +129,7 @@
   </head>
   <body style="background-color: grey;">
     <h1>Gemma Cam - Automated Plant System Edition</h1>
-    <img src="{{ url_for('video_feed') }}">
+    <img src="{{ url_for('video_feed') }}"/>
     <br></br>
     <table>
         <colgroup>
@@ -140,6 +140,8 @@
         </form>
         </tr>
     </table>
+    <br></br>
+    <img src="{{url_for('static', filename='system_diagram.png')}}"/>
     <br></br>
     <form action="KILLSWITCHON">
         <button class=buttonKILLSWITCH>KILL SWITCH ON</button>
@@ -201,26 +203,6 @@
         <td>{{info_p12}}</td>
         <td>{{info_p13}}</td>
       </tr>
-      <tr>
-        <td>{{info_time2}}</td>
-        <td>{{info_hum2}}</td>
-        <td>{{info_ss21}}</td>
-        <td>{{info_ss22}}</td>
-        <td>{{info_ss23}}</td>
-        <td>{{info_p21}}</td>
-        <td>{{info_p22}}</td>
-        <td>{{info_p23}}</td>     
-      </tr>   
-       <tr>
-        <td>{{info_time3}}</td>
-        <td>{{info_hum3}}</td>
-        <td>{{info_ss31}}</td>
-        <td>{{info_ss32}}</td>
-        <td>{{info_ss33}}</td>
-        <td>{{info_p31}}</td>
-        <td>{{info_p32}}</td>
-        <td>{{info_p33}}</td>     
-      </tr>     
     </table>
     <br>
     </br>
