@@ -1,9 +1,19 @@
+### User Defined
+
 *
 !*/
 !*.*
 *.csv
 *.workspace.code-workspace
 data.json
+
+# Image files
+*.jpg
+
+# Video files
+*.avi
+
+### End User Defined
 
 # Prerequisites
 *.d

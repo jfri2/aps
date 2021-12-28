@@ -23,6 +23,7 @@ from email.mime.text import MIMEText
 from email import encoders
 from email.utils import *
 import os
+import glob
 
 # Globals
 # TODO - Make vs_started check work
@@ -133,6 +134,10 @@ app = Flask(__name__, static_url_path='', static_folder='/share/aps/CamMonitor_D
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
+# Timelapse stuff
+timelapseImagePath = '/share/aps/timelapse/images/'
+timelapseVideoPath = '/share/aps/timelapse/videos/'
+
 @app.route("/", methods=['GET', 'POST'])
 def index():
     # return the rendered template
@@ -186,6 +191,36 @@ def index():
                                 info_p11=info_p11, \
                                 info_p12=info_p12, \
                                 info_p13=info_p12)
+                                
+def save_frame(frame):
+    timestamp = datetime.datetime.now()
+    filename = timelapseImagePath + timestamp.strftime('%Y-%m-%d_%H-%M-%S') + '.jpg'
+    cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    print('File written: {}'.format(filename))
+    
+def gen_timelapse():
+    file_list = []
+    img_array = []
+    
+    # Sort files in correct order for video
+    for filename in glob.glob(timelapseImagePath + '*.jpg'):
+        file_list.append(filename)
+
+    file_list.sort()
+
+    for i in file_list:
+        frame = cv2.imread(i)
+        height, width, layers = frame.shape
+        size = (width, height)
+        img_array.append(frame)
+        
+    framesPerSecond = 15
+    timestamp = datetime.datetime.now()
+    out = cv2.VideoWriter((timelapseVideoPath + timestamp.strftime('%Y-%m-%d_%H-%M-%S') + 'timelapse.avi'), cv2.VideoWriter_fourcc(*'DIVX'), framesPerSecond, size)
+    
+    for i in range(len(img_array)):
+        out.write(img_array[i])
+    out.release()
         
 def detect_motion(frameCount):
     # grab global references to the video stream, output frame, and
@@ -195,6 +230,11 @@ def detect_motion(frameCount):
     # read thus far
     md = MotionDetector(accumWeight=0.1)
     total = 0    
+    
+    # For timelapse stuff
+    timelapseDelay = 1       # Seconds
+    lastUpdatedTime = 0
+    tmp = 0
     
     # loop over frames from the video stream
     while True:
@@ -208,22 +248,28 @@ def detect_motion(frameCount):
         # grab the current timestamp and draw it on the frame
         timestamp = datetime.datetime.now()
         cv2.putText(frame, timestamp.strftime(
-            "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
-            
+            "%a %d %b %Y %H:%M:%S"), (10, frame.shape[0] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 4)
+        cv2.putText(frame, timestamp.strftime(
+            "%a %d %b %Y %H:%M:%S"), (10, frame.shape[0] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)     
+        motionFrame = frame                 
         # if the total number of frames has reached a sufficient
         # number to construct a reasonable background model, then
         # continue to process the frame
         if total > frameCount:
             # detect motion in the image
             motion = md.detect(gray)
+     
             # check to see if motion was found in the frame
             if motion is not None:
                 # unpack the tuple and draw the box surrounding the
                 # "motion area" on the output frame
                 (thresh, (minX, minY, maxX, maxY)) = motion
-                cv2.rectangle(frame, (minX, minY), (maxX, maxY),
-                    (0, 0, 255), 2)
+                cv2.rectangle(motionFrame, (minX, minY), (maxX, maxY),
+                    (0, 0, 0), 3)
+                cv2.rectangle(motionFrame, (minX, minY), (maxX, maxY),
+                    (0, 0, 255), 2)                    
 
         # update the background model and increment the total number
         # of frames read thus far
@@ -232,7 +278,15 @@ def detect_motion(frameCount):
         # acquire the lock, set the output frame, and release the
         # lock
         with lock:
-            outputFrame = frame.copy()         
+            outputFrame = motionFrame.copy()     
+            # Save frome to timelapse
+            if (time.time() > (lastUpdatedTime + timelapseDelay)):
+                save_frame(frame)
+                lastUpdatedTime = time.time()
+                tmp = tmp + 1
+                if (tmp % (60*30) == 0):
+                    gen_timelapse()
+                
             
 @app.route("/SCREENSHOT")       
 def screenshot():
@@ -278,7 +332,7 @@ def generate():
                 continue
         # yield the output frame in the byte format
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
-            bytearray(encodedImage) + b'\r\n')            
+            bytearray(encodedImage) + b'\r\n')    
             
 @app.route("/video_feed")
 def video_feed():
