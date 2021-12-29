@@ -282,11 +282,11 @@ def exec_gen_timelapse():
 
     startTime = time.time()
     timestamp = datetime.datetime.now()
-    fps = 15
+    fps = 20
     ffmpeg_command = (
-        "ffmpeg -r {} -i ".format(fps)
+        "ffmpeg -f image2 -r {} -i ".format(fps)
         + timelapseImagePath
-        + "%10d.jpg -vcodec mpeg4 -y"
+        + "%10d.jpg -vcodec libx264 -crf 18 -pix_fmt yuv420p -y "
         + timelapseVideoPath
         + timestamp.strftime("%Y-%m-%d_%H-%M-%S")
         + ".mp4"
@@ -332,7 +332,7 @@ def detect_motion(frameCount):
     total = 0
 
     # For timelapse stuff
-    timelapseDelay = 60  # Seconds
+    timelapseDelay = 60 * 5  # Seconds
     lastUpdatedTime = 0
 
     # loop over frames from the video stream
