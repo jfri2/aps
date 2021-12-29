@@ -1,8 +1,5 @@
 ### User Defined
 
-*
-!*/
-!*.*
 *.csv
 *.workspace.code-workspace
 data.json
@@ -11,7 +8,7 @@ data.json
 *.jpg
 
 # Video files
-*.avi
+*.mp4
 
 ### End User Defined
 

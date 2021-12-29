@@ -191,36 +191,54 @@ def index():
                                 info_p11=info_p11, \
                                 info_p12=info_p12, \
                                 info_p13=info_p12)
-                                
+                  
 def save_frame(frame):
-    timestamp = datetime.datetime.now()
-    filename = timelapseImagePath + timestamp.strftime('%Y-%m-%d_%H-%M-%S') + '.jpg'
-    cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-    print('File written: {}'.format(filename))
+    # Only save images between 5:00am and 11:00pm local time
+    currentTime = datetime.datetime.now()
+    if ((int(currentTime.hour) < 23) and ((int(currentTime.hour) >= 5))):
+        # Save images
+        existingFiles = os.listdir(timelapseImagePath)
+        if len(existingFiles) == 0:
+            imageNumber = 0
+        else:
+            imageNumber = len(existingFiles)
+        filename = timelapseImagePath + '{:010d}'.format(imageNumber) + '.jpg'
+        cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 75])                
+        # print('File written: {}'.format(filename))                
+        imageNumber = imageNumber + 1  
+    else:
+        pass
+    return
     
-def gen_timelapse():
-    file_list = []
-    img_array = []
+timelapseGenerationInProgress = False    
+def exec_gen_timelapse():    
+    timelapseGenerationInProgress = True
+    print('Timelapse video generation started')
     
-    # Sort files in correct order for video
-    for filename in glob.glob(timelapseImagePath + '*.jpg'):
-        file_list.append(filename)
-
-    file_list.sort()
-
-    for i in file_list:
-        frame = cv2.imread(i)
-        height, width, layers = frame.shape
-        size = (width, height)
-        img_array.append(frame)
+    numFrames = len(os.listdir(timelapseImagePath))
+    print('{0:d} Frames to process, expected to take {1:.2f} seconds'.format(numFrames, numFrames * 0.05))
+    
+    startTime = time.time()
+    timestamp = datetime.datetime.now() 
+    fps = 15    
+    ffmpeg_command = 'ffmpeg -r {} -i '.format(fps) + timelapseImagePath + '%10d.jpg -vcodec mpeg4 -y ' + timelapseVideoPath + timestamp.strftime('%Y-%m-%d_%H-%M-%S') + '.mp4'
+    ffmpeg_command = ffmpeg_command + ' > /dev/null 2>&1'
+    os.system(ffmpeg_command)
+    generationTime = time.time() - startTime
+    print('Timelapse video generation complete, took {0:.2f} seconds'.format(generationTime))   
+    timelapseGenerationInProgress = False
+    return   
+   
+@app.route("/GEN_TIMELAPSE")
+def gen_timelapse():   
+    if not timelapseGenerationInProgress:
+        t = threading.Thread(target=exec_gen_timelapse)
+        t.daemon = True
+        t.start()     
+    else:
+        pass      
         
-    framesPerSecond = 15
-    timestamp = datetime.datetime.now()
-    out = cv2.VideoWriter((timelapseVideoPath + timestamp.strftime('%Y-%m-%d_%H-%M-%S') + 'timelapse.avi'), cv2.VideoWriter_fourcc(*'DIVX'), framesPerSecond, size)
-    
-    for i in range(len(img_array)):
-        out.write(img_array[i])
-    out.release()
+    return (index())    
         
 def detect_motion(frameCount):
     # grab global references to the video stream, output frame, and
@@ -232,9 +250,8 @@ def detect_motion(frameCount):
     total = 0    
     
     # For timelapse stuff
-    timelapseDelay = 1       # Seconds
+    timelapseDelay = 60       # Seconds
     lastUpdatedTime = 0
-    tmp = 0
     
     # loop over frames from the video stream
     while True:
@@ -282,12 +299,8 @@ def detect_motion(frameCount):
             # Save frome to timelapse
             if (time.time() > (lastUpdatedTime + timelapseDelay)):
                 save_frame(frame)
-                lastUpdatedTime = time.time()
-                tmp = tmp + 1
-                if (tmp % (60*30) == 0):
-                    gen_timelapse()
-                
-            
+                lastUpdatedTime = time.time()                       
+
 @app.route("/SCREENSHOT")       
 def screenshot():
     path = '/tmp/screenshots'
@@ -298,7 +311,7 @@ def screenshot():
         content = 'Hilo! John or Rachel just took a screenshot!'
         
         # Grab the current screen and save as a PNG with current timestamp in /tmp/
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         screenshot = vs.read()
         screenshot_name = 'gemma-' + timestamp + '.png'
         cv2.imwrite(os.path.join(path, screenshot_name), screenshot)
