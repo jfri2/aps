@@ -1,0 +1,218 @@
+<html>
+    <head>
+        <title>Gemma Cam</title>
+        <style>
+            .button {
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;        
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+            }
+            .buttonGEN_TIMELAPSE {
+            height: 60px;
+            font-size: 32px;
+            background-color: #FCFF81; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonGEN_TIMELAPSE:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color: #ffcc00;
+            color: white;
+            }    
+            .buttonSCREENSHOT {
+            height: 60px;
+            font-size: 32px;
+            background-color: #FCFF81; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonSCREENSHOT:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color: #ffcc00;
+            color: white;
+            }
+            .buttonKILLSWITCH {
+            height: 60px;
+            font-size: 32px;
+            background-color:tomato; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonKILLSWITCH:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color:tomato;
+            color: white;
+            }    
+            .buttonWATER1 {
+            height: 60px;
+            font-size: 32px;
+            background-color:MediumSeaGreen; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonWATER1:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color:MediumSeaGreen;
+            color: white;
+            }    
+            .buttonWATER2 {
+            height: 60px;
+            font-size: 32px;
+            background-color:MediumSeaGreen; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonWATER2:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color:MediumSeaGreen;
+            color: white;
+            }    
+            .buttonWATER3 {
+            height: 60px;
+            font-size: 32px;
+            background-color:MediumSeaGreen; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonWATER3:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color:MediumSeaGreen;
+            color: white;
+            }        
+            .buttonGETCSV {
+            height: 60px;
+            font-size: 32px;
+            background-color:LightGrey; 
+            color: black; 
+            border: 2px solid #000000;
+            }
+            .buttonGETCSV:hover {
+            height: 60px;
+            font-size: 32px;
+            background-color:LightGrey;
+            color: white;
+            }       
+            table {
+            border-collapse: collapse;
+            width: 100%;
+            }
+            th, td {
+            text-align: left;
+            padding: 8px;
+            }
+            tr:nth-child(even) {
+            background-color: #D6EEEE;
+            }
+            tr:nth-child(odd) {
+            background-color: #FFFFFF;
+            }
+            tr {
+            border-bottom: 1px solid #ddd;
+            }
+        </style>
+    </head>
+    <body style="background-color: grey;">
+        <h1>Gemma Cam - Automated Plant System Edition</h1>
+        <img src="{{ url_for('video_feed') }}"/>
+        <br></br>
+        <table>
+            <colgroup>
+                <col span="2">
+            </colgroup>
+            <form action="SCREENSHOT">
+                <button class=buttonSCREENSHOT>SCREENSHOT</button>
+            </form>
+            <br></br>
+            <form action="GEN_TIMELAPSE">
+                <button class=buttonGEN_TIMELAPSE>GENERATE TIMELAPSE</button>
+            </form>
+            <br></br>
+            <h2>Latest Timelapse Video File: {{lastVideoFileName}}</h2>
+            <form action="DOWNLOAD_TIMELAPSE">
+                <button class=buttonGETCSV>DOWNLOAD TIMELAPSE</button>
+            </form>
+            </tr>
+        </table>
+        <br></br>
+        <img src="{{url_for('static', filename='system_diagram.png')}}"/>
+        <br></br>
+        <form action="KILLSWITCHON">
+            <button class=buttonKILLSWITCH>KILL SWITCH ON</button>
+        </form>
+        <form action="KILLSWITCHOFF">
+            <button class=buttonKILLSWITCH>KILL SWITCH OFF</button>        
+            <h3>Killswitch Status: {{info_killswitchstatus}}</h3>
+        </form>
+        <br></br>
+        <table>
+            <tr>
+                <th>
+                    <form action="WATER_1">
+                        <button class=buttonWATER1>WATER 1</button>
+                        <h3>Manual Water 1: {{info_water1}}</h3>
+                    </form>
+                </th>
+                <th>
+                    <form action="WATER_2">
+                        <button class=buttonWATER2>WATER 2</button>
+                        <h3>Manual Water 2: {{info_water2}}</h3>
+                    </form>
+                </th>
+                <th>
+                    <form action="WATER_3">
+                        <button class=buttonWATER3>WATER 3</button>
+                        <h3>Manual Water 3: {{info_water3}}</h3>
+                    </form>
+                </th>
+                <th>
+                    <form action="TESTPUMPS">
+                        <button class=buttonWATER3>Test Pumps</button>
+                        <h3>Test Pumps Status: {{info_testpumps}}</h3>
+                    </form>
+                </th>
+            </tr>
+        </table>
+        <br></br>
+        <table>
+            <tr>
+                <th>Timestamp</th>
+                <th>Temperature (degF)</th>
+                <th>Relative Humidity (%)</th>
+                <th>Soil Sensor 1 Moisture</th>
+                <th>Soil Sensor 2 Moisture</th>
+                <th>Soil Sensor 3 Moisture</th>
+                <th>Pump 1 On/Off</th>
+                <th>Pump 2 On/Off</th>
+                <th>Pump 3 On/Off</th>
+            </tr>
+            <tr>
+                <td>{{info_time1}}</td>
+                <td>{{info_temp1}}</td>
+                <td>{{info_hum1}}</td>
+                <td>{{info_ss11}}</td>
+                <td>{{info_ss12}}</td>
+                <td>{{info_ss13}}</td>
+                <td>{{info_p11}}</td>
+                <td>{{info_p12}}</td>
+                <td>{{info_p13}}</td>
+            </tr>
+        </table>
+        <br>
+        </br>
+        <form action="getCSV">
+            <button class=buttonGETCSV>Download sensor_data.csv</button>          
+        </form>
+    </body>
+</html>
