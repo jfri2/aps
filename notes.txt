@@ -10,7 +10,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/share/aps/CamMonitor_Debug/start.sh
+ExecStart=/share/aps/site/start.sh
 
 [Install]
 WantedBy=multi-user.target
