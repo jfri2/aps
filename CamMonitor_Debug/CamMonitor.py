@@ -16,127 +16,20 @@ import imutils
 import time
 import cv2
 import sys
-import smtplib, ssl
-import json
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
-from email import encoders
-from email.utils import *
 import os
 import glob
 from pathlib import Path
 import shutil
+from globals import *
+from emailer import Emailer
+from utils import *
+from csv import *
+from timelapse import *
 
 # Globals
 # TODO - Make vs_started check work
 # vs_started = False
 vs_started = True
-
-# CSV stuff
-def all_files_under(path):
-    for cur_path, dirnames, filenames in os.walk(path):
-        for filename in filenames:
-            yield os.path.join(cur_path, filename)
-
-
-def get_csv_filename():
-    return max(all_files_under("/share/aps/csrc/data/"))
-
-
-# Emailer
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-with open("/share/aps/CamMonitor_Debug/data.json") as jsonfile:
-    emails = json.load(jsonfile)
-
-killswitchFilePath = "/share/aps/csrc/pumps/killswitch.txt"
-testpumpsFilePath = "/share/aps/csrc/pumps/testpumps.txt"
-pump1FilePath = "/share/aps/csrc/pumps/pump1.txt"
-pump2FilePath = "/share/aps/csrc/pumps/pump2.txt"
-pump3FilePath = "/share/aps/csrc/pumps/pump3.txt"
-
-
-def writeToFile(filepath, str):
-    f = open(filepath, "w")
-    f.write(str)
-    f.close()
-
-
-def readFromFile(filepath):
-    f = open(filepath, "r")
-    text = f.read()
-    f.close()
-    return text
-
-
-class Emailer:
-    def sendmail(self, recipient, subject, content):
-
-        # Create Headers
-        headers = [
-            "From: " + emails["FromAddress"],
-            "Subject: " + subject,
-            "To: " + recipient,
-            "MIME-Version: 1.0",
-            "Content-Type: text/html",
-        ]
-        headers = "\r\n".join(headers)
-
-        # Connect to Gmail Server
-        session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        session.ehlo()
-        session.starttls()
-        session.ehlo()
-
-        # Login to Gmail
-        session.login(emails["FromAddress"], emails["FromPassword"])
-
-        # Send Email & Exit
-        session.sendmail(
-            emails["FromAddress"], recipient, headers + "\r\n\r\n" + content
-        )
-        session.quit
-
-    def sendmail_attachment(self, recipient, subject, content, filename):
-        msg = MIMEMultipart()
-        msg["From"] = emails["FromAddress"]
-        msg["To"] = recipient
-        msg["Date"] = formatdate(localtime=True)
-        msg["Subject"] = subject
-        msg.attach(MIMEText(content, "plain"))
-
-        # Open file in binary mode
-        with open(filename, "rb") as attachment:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
-
-        # Encode attachment in ASCII
-        encoders.encode_base64(part)
-
-        # Add header as key/value pair to attachment part
-        part.add_header("Content-Disposition", "attachment", filename=filename)
-
-        # Add attachment to msg and convert msg to string
-        msg.attach(part)
-        text = msg.as_string()
-
-        # Log into server and send email
-        email_context = ssl.create_default_context()
-
-        # Connect to Gmail Server
-        session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        session.ehlo()
-        session.starttls(context=email_context)
-        session.ehlo()
-
-        # Login to Gmail
-        session.login(emails["FromAddress"], emails["FromPassword"])
-
-        # Send Email & Exit
-        session.sendmail(emails["FromAddress"], recipient, text)
-        session.quit
-
 
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful when multiple browsers/tabs
@@ -152,11 +45,6 @@ app = Flask(
 # vs = VideoStream(usePiCamera=1).start()
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
-
-# Timelapse stuff
-timelapseImagePath = "/share/aps/timelapse/images/"
-timelapseVideoPath = "/share/aps/timelapse/videos/"
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -218,89 +106,6 @@ def index():
         info_p13=info_p12,
         lastVideoFileName=lastVideoFileName,
     )
-
-
-def save_frame(frame):
-    # Only save images between 5:00am and 11:00pm local time
-    currentTime = datetime.datetime.now()
-    # override
-    override = True
-    if ((int(currentTime.hour) < 23) and ((int(currentTime.hour) >= 5)) or override):
-        # Save images
-        existingFiles = os.listdir(timelapseImagePath)
-        if len(existingFiles) == 0:
-            imageNumber = 0
-        else:
-            imageNumber = len(existingFiles)
-        filename = timelapseImagePath + "{:010d}".format(imageNumber) + ".jpg"
-        cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-        # print('File written: {}'.format(filename))
-        imageNumber = imageNumber + 1
-    else:
-        pass
-    return
-
-
-timelapseGenerationInProgress = False
-
-
-def exec_gen_timelapse():
-    timelapseGenerationInProgress = True
-    
-    # Check files to see if they are in sequential order, rename any that are not in order
-    filelist = []
-    for filename in os.listdir(timelapseImagePath):
-        if filename.endswith('.jpg'):
-            filelist.append(os.path.join(timelapseImagePath, filename))
-        else:
-            continue
-    filelist.sort()
-    
-    missingFiles = []
-    lastFilename = '-1'
-    for file in filelist:
-        filename = Path(os.path.basename(file)).stem
-        if (int(filename) - 1 != int(lastFilename)):
-            missingFiles.append(int(filename) - 1)
-        lastFilename = filename
-    
-    # Copy filename + 1 to filename and rename
-    for filename in missingFiles:
-        newFilename = timelapseImagePath + "{:010d}".format(filename) + ".jpg"
-        filenameToCopy = timelapseImagePath + "{:010d}".format(filename + 1) + ".jpg"
-        shutil.copyfile(filenameToCopy, newFilename)
-        print('Missing file detected. Created new file {}'.format(filenameToCopy))
-    
-    print("Timelapse video generation started")
-
-    numFrames = len(os.listdir(timelapseImagePath))
-    print(
-        "{0:d} Frames to process, expected to take {1:.2f} seconds".format(
-            numFrames, numFrames * 0.05
-        )
-    )
-
-    startTime = time.time()
-    timestamp = datetime.datetime.now()
-    fps = 20
-    ffmpeg_command = (
-        "ffmpeg -f image2 -r {} -i ".format(fps)
-        + timelapseImagePath
-        + "%10d.jpg -vcodec libx264 -crf 18 -pix_fmt yuv420p -y "
-        + timelapseVideoPath
-        + timestamp.strftime("%Y-%m-%d_%H-%M-%S")
-        + ".mp4"
-    )
-    # ffmpeg_command = ffmpeg_command + " > /dev/null 2>&1"
-    os.system(ffmpeg_command)
-    generationTime = time.time() - startTime
-    print(
-        "Timelapse video generation complete, took {0:.2f} seconds".format(
-            generationTime
-        )
-    )
-    timelapseGenerationInProgress = False
-    return
 
 
 @app.route("/GEN_TIMELAPSE")
