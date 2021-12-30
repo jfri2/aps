@@ -1,2 +1,2 @@
 #!/bin/sh
-pylint --rcfile .pylintrc $(find . -name "*.py" | xargs)
+pylint -E --rcfile .pylintrc $(find . -name "*.py" | xargs)
