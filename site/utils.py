@@ -2,16 +2,16 @@
 import os
 
 
-def writeToFile(filepath, str):
-    f = open(filepath, "w")
-    f.write(str)
-    f.close()
+def write_to_file(filepath, data):
+    file = open(filepath, "w")
+    file.write(data)
+    file.close()
 
 
-def readFromFile(filepath):
-    f = open(filepath, "r")
-    text = f.read()
-    f.close()
+def read_from_file(filepath):
+    file = open(filepath, "r")
+    text = file.read()
+    file.close()
     return text
 
 

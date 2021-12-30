@@ -4,6 +4,7 @@ import time
 import os
 import cv2
 import shutil
+from pathlib import Path
 from site.globals import *
 
 timelapse_generation_in_process = False

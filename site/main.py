@@ -18,7 +18,6 @@ import cv2
 import sys
 import os
 import glob
-from pathlib import Path
 import shutil
 from site.globals import *
 from site.emailer import *
@@ -48,11 +47,11 @@ time.sleep(2.0)
 @app.route("/", methods=["GET", "POST"])
 def index():
     # return the rendered template
-    info_killswitchstatus = readFromFile(KILL_SWITCH_FILE_PATH)
-    info_water1 = readFromFile(PUMP_1_FILE_PATH)
-    info_water2 = readFromFile(PUMP_2_FILE_PATH)
-    info_water3 = readFromFile(PUMP_3_FILE_PATH)
-    info_testpumps = readFromFile(TEST_PUMPS_FILE_PATH)
+    info_killswitchstatus = read_from_file(KILL_SWITCH_FILE_PATH)
+    info_water1 = read_from_file(PUMP_1_FILE_PATH)
+    info_water2 = read_from_file(PUMP_2_FILE_PATH)
+    info_water3 = read_from_file(PUMP_3_FILE_PATH)
+    info_testpumps = read_from_file(TEST_PUMPS_FILE_PATH)
     info_time1 = ""
     info_temp1 = ""
     info_hum1 = ""
@@ -109,12 +108,9 @@ def index():
 
 @app.route("/GEN_TIMELAPSE")
 def gen_timelapse():
-    if not timelapseGenerationInProgress:
-        t = threading.Thread(target=exec_gen_timelapse)
-        t.daemon = True
-        t.start()
-    else:
-        pass
+    t = threading.Thread(target=exec_gen_timelapse)
+    t.daemon = True
+    t.start()
 
     return index()
 
@@ -279,37 +275,37 @@ def getCSV():
 
 @app.route("/KILLSWITCHON")
 def buttonKILLSWITCHON():
-    writeToFile(KILL_SWITCH_FILE_PATH, "1")
+    write_to_file(KILL_SWITCH_FILE_PATH, "1")
     return index()
 
 
 @app.route("/KILLSWITCHOFF")
 def buttonKILLSWITCHOFF():
-    writeToFile(KILL_SWITCH_FILE_PATH, "0")
+    write_to_file(KILL_SWITCH_FILE_PATH, "0")
     return index()
 
 
 @app.route("/TESTPUMPS")
 def buttonTESTPUMPS():
-    writeToFile(TEST_PUMPS_FILE_PATH, "1")
+    write_to_file(TEST_PUMPS_FILE_PATH, "1")
     return index()
 
 
 @app.route("/WATER_1")
 def buttonWATER1():
-    writeToFile(PUMP_1_FILE_PATH, "1")
+    write_to_file(PUMP_1_FILE_PATH, "1")
     return index()
 
 
 @app.route("/WATER_2")
 def buttonWATER2():
-    writeToFile(PUMP_2_FILE_PATH, "1")
+    write_to_file(PUMP_2_FILE_PATH, "1")
     return index()
 
 
 @app.route("/WATER_3")
 def buttonWATER3():
-    writeToFile(PUMP_3_FILE_PATH, "1")
+    write_to_file(PUMP_3_FILE_PATH, "1")
     return index()
 
 

@@ -18,7 +18,6 @@ with open(EMAIL_DATA_FILENAME) as jsonfile:
 
 class Emailer:
     def sendmail(self, recipient, subject, content):
-
         # Create Headers
         headers = [
             "From: " + emails["FromAddress"],
@@ -81,4 +80,4 @@ class Emailer:
 
         # Send Email & Exit
         session.sendmail(emails["FromAddress"], recipient, text)
-        session.quit
+        session.quit()
