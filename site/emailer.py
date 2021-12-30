@@ -1,4 +1,4 @@
-# Emailer    
+# Emailer
 import json, smtplib, ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -6,14 +6,17 @@ from email.mime.text import MIMEText
 from email import encoders
 from email.utils import *
 
+# Constants
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+EMAIL_DATA_FILENAME = "/share/aps/site/data.json"
+
+
 class Emailer:
     def __init__(self):
-        SMTP_SERVER = "smtp.gmail.com"
-        SMTP_PORT = 587
-        EMAIL_DATA_FILENAME = "/share/aps/site/data.json"
         with open(EMAIL_DATA_FILENAME) as jsonfile:
             emails = json.load(jsonfile)
-            
+
     def sendmail(self, recipient, subject, content):
 
         # Create Headers

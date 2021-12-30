@@ -37,14 +37,13 @@ vs_started = True
 outputFrame = None
 lock = threading.Lock()
 # initialize a flask object
-app = Flask(
-    __name__, static_url_path="", static_folder="/share/aps/site/static"
-)
+app = Flask(__name__, static_url_path="", static_folder="/share/aps/site/static")
 # initialize the video stream and allow the camera sensor to
 # warmup
 # vs = VideoStream(usePiCamera=1).start()
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -85,7 +84,7 @@ def index():
         info_p12 = sensor_readings[8]
         info_p13 = sensor_readings[9]
 
-    # Populate last timelapse video filename    
+    # Populate last timelapse video filename
     lastVideoFileName = os.path.basename(max(all_files_under(timelapseVideoPath)))
 
     return render_template(
@@ -133,7 +132,7 @@ def detect_motion(frameCount):
     global vs, outputFrame, lock
     # initialize the motion detector and the total number of frames
     # read thus far
-    md = MotionDetector(accumWeight=0.1)
+    md = MotionDetector(accum_weight=0.1)
     total = 0
 
     # For timelapse stuff
@@ -181,9 +180,9 @@ def detect_motion(frameCount):
             if motion is not None:
                 # unpack the tuple and draw the box surrounding the
                 # "motion area" on the output frame
-                (thresh, (minX, minY, maxX, maxY)) = motion
-                cv2.rectangle(motionFrame, (minX, minY), (maxX, maxY), (0, 0, 0), 3)
-                cv2.rectangle(motionFrame, (minX, minY), (maxX, maxY), (0, 0, 255), 2)
+                (thresh, (min_x, min_y, maxX, maxY)) = motion
+                cv2.rectangle(motionFrame, (min_x, min_y), (maxX, maxY), (0, 0, 0), 3)
+                cv2.rectangle(motionFrame, (min_x, min_y), (maxX, maxY), (0, 0, 255), 2)
 
         # update the background model and increment the total number
         # of frames read thus far
