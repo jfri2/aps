@@ -21,7 +21,7 @@ import glob
 from pathlib import Path
 import shutil
 from globals import *
-from emailer import Emailer
+from emailer import *
 from utils import *
 from csv import *
 from timelapse import *
@@ -34,7 +34,7 @@ vs_started = True
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful when multiple browsers/tabs
 # are viewing the stream)
-outputFrame = None
+output_frame = None
 lock = threading.Lock()
 # initialize a flask object
 app = Flask(__name__, static_url_path="", static_folder="/share/aps/site/static")
@@ -48,11 +48,11 @@ time.sleep(2.0)
 @app.route("/", methods=["GET", "POST"])
 def index():
     # return the rendered template
-    info_killswitchstatus = readFromFile(killswitchFilePath)
-    info_water1 = readFromFile(pump1FilePath)
-    info_water2 = readFromFile(pump2FilePath)
-    info_water3 = readFromFile(pump3FilePath)
-    info_testpumps = readFromFile(testpumpsFilePath)
+    info_killswitchstatus = readFromFile(KILL_SWITCH_FILE_PATH)
+    info_water1 = readFromFile(PUMP_1_FILE_PATH)
+    info_water2 = readFromFile(PUMP_2_FILE_PATH)
+    info_water3 = readFromFile(PUMP_3_FILE_PATH)
+    info_testpumps = readFromFile(TEST_PUMPS_FILE_PATH)
     info_time1 = ""
     info_temp1 = ""
     info_hum1 = ""
@@ -85,7 +85,7 @@ def index():
         info_p13 = sensor_readings[9]
 
     # Populate last timelapse video filename
-    lastVideoFileName = os.path.basename(max(all_files_under(timelapseVideoPath)))
+    lastVideoFileName = os.path.basename(max(all_files_under(TIMELAPSE_VIDEO_PATH)))
 
     return render_template(
         "index.html",
@@ -121,7 +121,7 @@ def gen_timelapse():
 
 @app.route("/DOWNLOAD_TIMELAPSE")
 def download_timelapse():
-    timelapse_filename = max(all_files_under(timelapseVideoPath))
+    timelapse_filename = max(all_files_under(TIMELAPSE_VIDEO_PATH))
     print(timelapse_filename)
     return send_file(timelapse_filename, as_attachment=True)
 
@@ -129,7 +129,7 @@ def download_timelapse():
 def detect_motion(frameCount):
     # grab global references to the video stream, output frame, and
     # lock variables
-    global vs, outputFrame, lock
+    global vs, output_frame, lock
     # initialize the motion detector and the total number of frames
     # read thus far
     md = MotionDetector(accum_weight=0.1)
@@ -180,9 +180,9 @@ def detect_motion(frameCount):
             if motion is not None:
                 # unpack the tuple and draw the box surrounding the
                 # "motion area" on the output frame
-                (thresh, (min_x, min_y, maxX, maxY)) = motion
-                cv2.rectangle(motionFrame, (min_x, min_y), (maxX, maxY), (0, 0, 0), 3)
-                cv2.rectangle(motionFrame, (min_x, min_y), (maxX, maxY), (0, 0, 255), 2)
+                (thresh, (min_x, min_y, max_x, max_y)) = motion
+                cv2.rectangle(motionFrame, (min_x, min_y), (max_x, max_y), (0, 0, 0), 3)
+                cv2.rectangle(motionFrame, (min_x, min_y), (max_x, max_y), (0, 0, 255), 2)
 
         # update the background model and increment the total number
         # of frames read thus far
@@ -191,7 +191,7 @@ def detect_motion(frameCount):
         # acquire the lock, set the output frame, and release the
         # lock
         with lock:
-            outputFrame = motionFrame.copy()
+            output_frame = motionFrame.copy()
             # Save frome to timelapse
             if time.time() > (lastUpdatedTime + timelapseDelay):
                 save_frame(frame)
@@ -237,17 +237,17 @@ def screenshot():
 
 def generate():
     # grab global references to the output frame and lock variables
-    global outputFrame, lock
+    global output_frame, lock
     # loop over frames from the output stream
     while True:
         # wait until the lock is acquired
         with lock:
             # check if the output frame is available, otherwise skip
             # the iteration of the loop
-            if outputFrame is None:
+            if output_frame is None:
                 continue
             # encode the frame in JPEG format
-            (flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
+            (flag, encodedImage) = cv2.imencode(".jpg", output_frame)
             # ensure the frame was successfully encoded
             if not flag:
                 continue
@@ -279,37 +279,37 @@ def getCSV():
 
 @app.route("/KILLSWITCHON")
 def buttonKILLSWITCHON():
-    writeToFile(killswitchFilePath, "1")
+    writeToFile(KILL_SWITCH_FILE_PATH, "1")
     return index()
 
 
 @app.route("/KILLSWITCHOFF")
 def buttonKILLSWITCHOFF():
-    writeToFile(killswitchFilePath, "0")
+    writeToFile(KILL_SWITCH_FILE_PATH, "0")
     return index()
 
 
 @app.route("/TESTPUMPS")
 def buttonTESTPUMPS():
-    writeToFile(testpumpsFilePath, "1")
+    writeToFile(TEST_PUMPS_FILE_PATH, "1")
     return index()
 
 
 @app.route("/WATER_1")
 def buttonWATER1():
-    writeToFile(pump1FilePath, "1")
+    writeToFile(PUMP_1_FILE_PATH, "1")
     return index()
 
 
 @app.route("/WATER_2")
 def buttonWATER2():
-    writeToFile(pump2FilePath, "1")
+    writeToFile(PUMP_2_FILE_PATH, "1")
     return index()
 
 
 @app.route("/WATER_3")
 def buttonWATER3():
-    writeToFile(pump3FilePath, "1")
+    writeToFile(PUMP_3_FILE_PATH, "1")
     return index()
 
 

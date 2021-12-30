@@ -1,5 +1,7 @@
 # Emailer
-import json, smtplib, ssl
+import json
+import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
@@ -10,13 +12,11 @@ from email.utils import *
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_DATA_FILENAME = "/share/aps/site/data.json"
+with open(EMAIL_DATA_FILENAME) as jsonfile:
+    emails = json.load(jsonfile)
 
 
 class Emailer:
-    def __init__(self):
-        with open(EMAIL_DATA_FILENAME) as jsonfile:
-            emails = json.load(jsonfile)
-
     def sendmail(self, recipient, subject, content):
 
         # Create Headers
@@ -42,7 +42,7 @@ class Emailer:
         session.sendmail(
             emails["FromAddress"], recipient, headers + "\r\n\r\n" + content
         )
-        session.quit
+        session.quit()
 
     def sendmail_attachment(self, recipient, subject, content, filename):
         msg = MIMEMultipart()
