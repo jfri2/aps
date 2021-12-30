@@ -21,4 +21,4 @@ jobs:
         pip install requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint --rcfile ./site/pylintrc $(find . -name "*.py" | xargs)
+        pylint --rcfile ./site/.pylintrc $(find . -name "*.py" | xargs)
