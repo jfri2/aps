@@ -1,2 +1,2 @@
 #!/bin/sh
-pylint -E --rcfile .pylintrc $(find . -name "*.py" | xargs)
+export PYTHONPATH=.; pylint -E --rcfile .pylintrc $(find . -name "*.py" | xargs)

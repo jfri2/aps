@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 # imports
-from site.image_processing.motion_detector import MotionDetector
-from imutils.video import VideoStream
 from flask import Response
 from flask import Flask, url_for
 from flask import render_template
 from flask import request
 from flask import redirect
 from flask import send_file
+from imutils.video import VideoStream
 from functools import wraps
 import threading
 import argparse
@@ -19,11 +18,12 @@ import sys
 import os
 import glob
 import shutil
-from site.globals import *
-from site.emailer import *
-from site.utils import *
-from site.csv import *
-from site.timelapse import *
+from image_processing.motion_detector import MotionDetector
+from globals import *
+from emailer import *
+from utils import *
+from csv import *
+from timelapse import *
 
 # Globals
 # TODO - Make vs_started check work
