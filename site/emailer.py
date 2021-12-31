@@ -8,19 +8,18 @@ from email.mime.text import MIMEText
 from email import encoders
 from email.utils import *
 
-# Constants
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-EMAIL_DATA_FILENAME = "/share/aps/site/data.json"
-with open(EMAIL_DATA_FILENAME) as jsonfile:
-    emails = json.load(jsonfile)
-
-
 class Emailer:
+    def __init__(self):
+        self.SMTP_SERVER = "smtp.gmail.com"
+        self.SMTP_PORT = 587
+        self.EMAIL_DATA_FILENAME = "/share/aps/site/data.json"
+        with open(self.EMAIL_DATA_FILENAME) as jsonfile:
+            self.emails = json.load(jsonfile)        
+
     def sendmail(self, recipient, subject, content):
         # Create Headers
         headers = [
-            "From: " + emails["FromAddress"],
+            "From: " + self.emails["FromAddress"],
             "Subject: " + subject,
             "To: " + recipient,
             "MIME-Version: 1.0",
@@ -35,17 +34,17 @@ class Emailer:
         session.ehlo()
 
         # Login to Gmail
-        session.login(emails["FromAddress"], emails["FromPassword"])
+        session.login(self.emails["FromAddress"], self.emails["FromPassword"])
 
         # Send Email & Exit
         session.sendmail(
-            emails["FromAddress"], recipient, headers + "\r\n\r\n" + content
+            self.emails["FromAddress"], recipient, headers + "\r\n\r\n" + content
         )
         session.quit()
 
     def sendmail_attachment(self, recipient, subject, content, filename):
         msg = MIMEMultipart()
-        msg["From"] = emails["FromAddress"]
+        msg["From"] = self.emails["FromAddress"]
         msg["To"] = recipient
         msg["Date"] = formatdate(localtime=True)
         msg["Subject"] = subject
@@ -70,14 +69,14 @@ class Emailer:
         email_context = ssl.create_default_context()
 
         # Connect to Gmail Server
-        session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        session = smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT)
         session.ehlo()
         session.starttls(context=email_context)
         session.ehlo()
 
         # Login to Gmail
-        session.login(emails["FromAddress"], emails["FromPassword"])
+        session.login(self.emails["FromAddress"], self.emails["FromPassword"])
 
         # Send Email & Exit
-        session.sendmail(emails["FromAddress"], recipient, text)
+        session.sendmail(self.emails["FromAddress"], recipient, text)
         session.quit()

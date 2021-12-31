@@ -19,3 +19,7 @@ def all_files_under(path):
     for cur_path, _, filenames in os.walk(path):
         for filename in filenames:
             yield os.path.join(cur_path, filename)
+
+
+def get_csv_filename():
+    return max(all_files_under("/share/aps/csrc/data/"))

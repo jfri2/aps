@@ -20,7 +20,7 @@ import glob
 import shutil
 from image_processing.motion_detector import MotionDetector
 from globals import *
-from emailer import *
+from emailer import Emailer
 from utils import *
 from csv import *
 from timelapse import *
@@ -43,6 +43,8 @@ app = Flask(__name__, static_url_path="", static_folder="/share/aps/site/static"
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
+# init timelapse
+timelapse = Timelapse()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -84,7 +86,7 @@ def index():
         info_p13 = sensor_readings[9]
 
     # Populate last timelapse video filename
-    lastVideoFileName = os.path.basename(max(all_files_under(TIMELAPSE_VIDEO_PATH)))
+    lastVideoFileName = os.path.basename(max(all_files_under(timelapse.TIMELAPSE_VIDEO_PATH)))
 
     return render_template(
         "index.html",
@@ -108,7 +110,7 @@ def index():
 
 @app.route("/GEN_TIMELAPSE")
 def gen_timelapse():
-    t = threading.Thread(target=exec_gen_timelapse)
+    t = threading.Thread(target=timelapse.exec_gen_timelapse)
     t.daemon = True
     t.start()
 
@@ -117,7 +119,7 @@ def gen_timelapse():
 
 @app.route("/DOWNLOAD_TIMELAPSE")
 def download_timelapse():
-    timelapse_filename = max(all_files_under(TIMELAPSE_VIDEO_PATH))
+    timelapse_filename = max(all_files_under(timelapse.TIMELAPSE_VIDEO_PATH))
     print(timelapse_filename)
     return send_file(timelapse_filename, as_attachment=True)
 
@@ -190,7 +192,7 @@ def detect_motion(frameCount):
             output_frame = motionFrame.copy()
             # Save frome to timelapse
             if time.time() > (lastUpdatedTime + timelapseDelay):
-                save_frame(frame)
+                timelapse.save_frame(frame)
                 lastUpdatedTime = time.time()
 
 
@@ -211,18 +213,18 @@ def screenshot():
     else:
         content = "Video stream is not started, unable to take screenshot"
 
-    sender = Emailer()
-    recipient = emails["ToAddress1"]
+    emailer = Emailer()
+    recipient = emailer.emails["ToAddress1"]
     subject = "GemmaCam Screenshot"
-    sender.sendmail_attachment(
+    emailer.sendmail_attachment(
         recipient=recipient,
         subject=subject,
         content=content,
         filename=os.path.join(path, screenshot_name),
     )
 
-    recipient = emails["ToAddress2"]
-    sender.sendmail_attachment(
+    recipient = emailer.emails["ToAddress2"]
+    emailer.sendmail_attachment(
         recipient=recipient,
         subject=subject,
         content=content,
