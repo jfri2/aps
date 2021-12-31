@@ -28,7 +28,7 @@ class Emailer:
         headers = "\r\n".join(headers)
 
         # Connect to Gmail Server
-        session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        session = smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT)
         session.ehlo()
         session.starttls()
         session.ehlo()
