@@ -63,7 +63,7 @@ def index():
     info_p11 = ""
     info_p12 = ""
     info_p13 = ""
-    lastVideoFileName = ""
+    lastVideoFileName = timelapse.latest_timelapse_filename
 
     # Populate fields from latest csv file for webpage
     with open(get_csv_filename(), "rb") as f:
@@ -85,9 +85,6 @@ def index():
         info_p12 = sensor_readings[8]
         info_p13 = sensor_readings[9]
 
-    # Populate last timelapse video filename
-    lastVideoFileName = os.path.basename(max(all_files_under(timelapse.TIMELAPSE_VIDEO_PATH)))
-
     return render_template(
         "index.html",
         info_killswitchstatus=info_killswitchstatus,
@@ -108,18 +105,9 @@ def index():
     )
 
 
-@app.route("/GEN_TIMELAPSE")
-def gen_timelapse():
-    t = threading.Thread(target=timelapse.exec_gen_timelapse)
-    t.daemon = True
-    t.start()
-
-    return index()
-
-
 @app.route("/DOWNLOAD_TIMELAPSE")
 def download_timelapse():
-    timelapse_filename = max(all_files_under(timelapse.TIMELAPSE_VIDEO_PATH))
+    timelapse_filename = timelapse.TIMELAPSE_VIDEO_PATH + timelapse.latest_timelapse_filename
     print(timelapse_filename)
     return send_file(timelapse_filename, as_attachment=True)
 
