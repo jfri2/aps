@@ -16,7 +16,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: List directory
       run: |
-        ll
+        ls
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
