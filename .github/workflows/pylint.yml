@@ -19,6 +19,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
         pip install -r ./site/requirements.txt
+    - name: Set pythonpath
+      run: |
+        echo "PYTHONPATH=." >> $GITHUB_ENV
     - name: Analysing the code with pylint
       run: |
         pylint -E --rcfile ./site/.pylintrc $(find . -name "*.py" | xargs)
