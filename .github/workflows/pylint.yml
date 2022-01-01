@@ -21,7 +21,7 @@ jobs:
         pip install -r ./site/requirements.txt
     - name: Set pythonpath
       run: |
-        echo "PYTHONPATH=jfri2/aps/site" >> $GITHUB_ENV
+        echo "PYTHONPATH=/home/runner/work/aps/site" >> $GITHUB_ENV
     - name: Analysing the code with pylint
       run: |
         pylint -E --rcfile ./site/.pylintrc $(find . -name "*.py" | xargs)
