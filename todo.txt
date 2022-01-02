@@ -1,0 +1,14 @@
+1) Fix reliability issues with cam monitor/website. Make sure it launches 
+without error 100% of the time. Probably do something with auto detection of 
+cameras and make sure that we can handle cases where a camera isnt actually 
+plugged in
+
+2) Email log files (last XYZ lines of main.out?) to me every night to assist 
+with debugging on trips
+
+3) Create IP logger script to parse IP addresses from log files
+
+4) Stress test this with multiple accesses from multiple devices, how do things
+handle? 
+
+5) LONG TERM: Make this website actually look nice. Learn how to front-end for once. Build a better API around this and document it
