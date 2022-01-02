@@ -110,7 +110,7 @@ def screenshot():
     # Create a screenshots directory if not exist in /tmp/
     if not os.path.exists(path):
         os.mkdir(path)
-    if vs_started:
+    if aps_video.vs_started:
         content = "Hilo! John or Rachel just took a screenshot!"
 
         # Grab the current screen and save as a PNG with current timestamp in /tmp/

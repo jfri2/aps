@@ -26,6 +26,14 @@ class ApsVideo:
         generate_frame_thread.daemon = True
         generate_frame_thread.start()
 
+    def get_screenshot(self):
+        frame = None
+        with self.frame_lock:
+            # Pull latest image out of frame queue, return it, and put it back in frame queue
+            frame = self.frame_queue.dequeue()
+            self.frame_queue.enqueue(frame)
+        return frame
+
     def generate_frame(self):
         timelapseDelay = 60 * 2  # Seconds
         lastUpdatedTime = 0
