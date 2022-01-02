@@ -2,34 +2,39 @@ from imutils.video import VideoStream
 import threading
 import time
 import datetime
+import os
+os.environ['OPENCV_IO_MAX_IMAGE_PIXELS']=str(2**64)
 import cv2
 import collections
+import numpy as np
 from timelapse import Timelapse
 from utils import *
 
 
 class ApsVideo:
-    def __init__(self, source='pi'):
-        # source: "pi" for pi camera, "usb" for usb webcam. Must have fswebcam installed on host machine
+    def __init__(self,):
+        # Cleanup any cv2 things running
+        cv2.destroyAllWindows()
+        
+        # source: 2 for pi camera, 0 for usb webcam. Must have fswebcam installed on host machine
         self.vs_started = True
         self.frame_lock = threading.Lock()
         self.frame_queue = Queue(max_size=10)
         
-        if (source == 'pi'):
-            self.source = 0
-        elif (source == 'usb'):
-            self.source = 1
-        else:
-            print('No camera source entered, defaulting to pi camera')
-            self.source = 0
-
         # Init video stream, allow camera to warmup
-        self.frame_width_px = 1280
-        self.frame_height_px = 720
-        self.vs = VideoStream(src=self.source).start()        
-        self.vs.stream.set(3, self.frame_width_px)
-        self.vs.stream.set(4, self.frame_height_px)
-        time.sleep(0.5)
+        self.frame_width_px = 1024
+        self.frame_height_px = 768
+        
+        self.vs_pi = VideoStream(src=0).start() 
+        self.vs_pi.stream.set(3, self.frame_width_px)
+        self.vs_pi.stream.set(4, self.frame_height_px)
+        
+        self.vs_usb = VideoStream(src=2).start() 
+        self.vs_usb.stream.set(3, self.frame_width_px)
+        self.vs_usb.stream.set(4, self.frame_height_px)      
+
+        # Sleep to allow cameras to warm up
+        time.sleep(2)
 
         # Init timelapse object
         self.timelapse = Timelapse()
@@ -46,6 +51,15 @@ class ApsVideo:
             frame = self.frame_queue.dequeue()
             self.frame_queue.enqueue(frame)
         return frame
+        
+    def _merge_frames(self, frame1, frame2):
+        frame1 = frame1[:,:,:3]
+        frame1_x, _ = frame1.shape[:2]
+        frame2 = frame2[:,:,:3]
+        x, y = frame2.shape[0:2]
+        new_frame = cv2.resize(frame2,(int(y * float(frame1_x) / x), frame1_x))
+        new_frame = np.hstack((new_frame, frame1))
+        return (new_frame)
 
     def generate_frame(self):
         timelapseDelay = 60 * 2  # Seconds
@@ -58,7 +72,9 @@ class ApsVideo:
             time.sleep(0.05)
             with self.frame_lock:
                 # Get frame from camera
-                frame = self.vs.read()
+                pi_frame = self.vs_pi.read()
+                usb_frame = self.vs_usb.read()
+                frame = self._merge_frames(pi_frame, usb_frame)
 
                 # Write timestamp on top of frame
                 timestamp = datetime.datetime.now()
@@ -128,5 +144,7 @@ class ApsVideo:
                 continue
 
     def stop(self):
-        # Release video stream pointer
-        self.vs.stop()
+        # Release video stream pointers
+        cv2.destroyAllWindows()
+        self.vs_pi.stop()
+        self.vs_usb.stop()
