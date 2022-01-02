@@ -3,7 +3,8 @@ import threading
 import time
 import datetime
 import os
-os.environ['OPENCV_IO_MAX_IMAGE_PIXELS']=str(2**64)
+
+os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = str(2 ** 64)
 import cv2
 import collections
 import numpy as np
@@ -12,26 +13,28 @@ from utils import *
 
 
 class ApsVideo:
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         # Cleanup any cv2 things running
         cv2.destroyAllWindows()
-        
+
         # source: 2 for pi camera, 0 for usb webcam. Must have fswebcam installed on host machine
         self.vs_started = True
         self.frame_lock = threading.Lock()
         self.frame_queue = Queue(max_size=10)
-        
+
         # Init video stream, allow camera to warmup
         self.frame_width_px = 1024
         self.frame_height_px = 768
-        
-        self.vs_pi = VideoStream(src=0).start() 
+
+        self.vs_pi = VideoStream(src=0).start()
         self.vs_pi.stream.set(3, self.frame_width_px)
         self.vs_pi.stream.set(4, self.frame_height_px)
-        
-        self.vs_usb = VideoStream(src=2).start() 
+
+        self.vs_usb = VideoStream(src=2).start()
         self.vs_usb.stream.set(3, self.frame_width_px)
-        self.vs_usb.stream.set(4, self.frame_height_px)      
+        self.vs_usb.stream.set(4, self.frame_height_px)
 
         # Sleep to allow cameras to warm up
         time.sleep(2)
@@ -51,15 +54,15 @@ class ApsVideo:
             frame = self.frame_queue.dequeue()
             self.frame_queue.enqueue(frame)
         return frame
-        
+
     def _merge_frames(self, frame1, frame2):
-        frame1 = frame1[:,:,:3]
+        frame1 = frame1[:, :, :3]
         frame1_x, _ = frame1.shape[:2]
-        frame2 = frame2[:,:,:3]
+        frame2 = frame2[:, :, :3]
         x, y = frame2.shape[0:2]
-        new_frame = cv2.resize(frame2,(int(y * float(frame1_x) / x), frame1_x))
+        new_frame = cv2.resize(frame2, (int(y * float(frame1_x) / x), frame1_x))
         new_frame = np.hstack((new_frame, frame1))
-        return (new_frame)
+        return new_frame
 
     def generate_frame(self):
         timelapseDelay = 60 * 2  # Seconds
