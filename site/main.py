@@ -110,16 +110,20 @@ def screenshot():
     if not os.path.exists(path):
         os.mkdir(path)
     if aps_video.vs_started:
-        try: 
+        try:
             content = "Hilo! John or Rachel just took a screenshot!"
             # Grab the current screen and save as a PNG with current timestamp in /tmp/
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             screenshot_frame = aps_video.get_screenshot()
             screenshot_name = "gemma-" + timestamp + ".png"
             result = cv2.imwrite(os.path.join(path, screenshot_name), screenshot_frame)
-            if not result: 
-                print('Failed to save screenshot to {}'.format(os.path.join(path, screenshot_name)))
-            
+            if not result:
+                print(
+                    "Failed to save screenshot to {}".format(
+                        os.path.join(path, screenshot_name)
+                    )
+                )
+
             # Send the email
             emailer = Emailer()
             recipient = emailer.emails["ToAddress1"]
@@ -137,12 +141,12 @@ def screenshot():
                 subject=subject,
                 content=content,
                 filename=os.path.join(path, screenshot_name),
-            )  
+            )
         except Exception as screenshot_exception:
             print(screenshot_exception)
     else:
         content = "Video stream is not started, unable to take screenshot"
-    
+
     return index()
 
 
