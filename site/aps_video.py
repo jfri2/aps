@@ -14,11 +14,8 @@ from utils import *
 
 class ApsVideo:
     def __init__(
-        self,
+        self
     ):
-        # Cleanup any cv2 things running
-        cv2.destroyAllWindows()
-
         # source: 2 for pi camera, 0 for usb webcam. Must have fswebcam installed on host machine
         self.vs_started = True
         self.frame_lock = threading.Lock()
@@ -67,7 +64,9 @@ class ApsVideo:
     def generate_frame(self):
         timelapseDelay = 60 * 2  # Seconds
         lastUpdatedTime = 0
-        frame = []
+        pi_frame = None
+        usb_frame = None        
+        frame = None
         frame_updated = False
 
         while True:
@@ -77,34 +76,35 @@ class ApsVideo:
                 # Get frame from camera
                 pi_frame = self.vs_pi.read()
                 usb_frame = self.vs_usb.read()
-                frame = self._merge_frames(pi_frame, usb_frame)
+                if (pi_frame is not None) and (usb_frame is not None):
+                    frame = self._merge_frames(pi_frame, usb_frame)
 
-                # Write timestamp on top of frame
-                timestamp = datetime.datetime.now()
-                cv2.putText(
-                    frame,
-                    timestamp.strftime("%a %d %b %Y %H:%M:%S"),
-                    (10, frame.shape[0] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    (0, 0, 0),
-                    4,
-                )
+                    # Write timestamp on top of frame
+                    timestamp = datetime.datetime.now()
+                    cv2.putText(
+                        frame,
+                        timestamp.strftime("%a %d %b %Y %H:%M:%S"),
+                        (10, frame.shape[0] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (0, 0, 0),
+                        4,
+                    )
 
-                cv2.putText(
-                    frame,
-                    timestamp.strftime("%a %d %b %Y %H:%M:%S"),
-                    (10, frame.shape[0] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7,
-                    (255, 255, 255),
-                    2,
-                )
+                    cv2.putText(
+                        frame,
+                        timestamp.strftime("%a %d %b %Y %H:%M:%S"),
+                        (10, frame.shape[0] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (255, 255, 255),
+                        2,
+                    )
 
-                # Insert frame into frame queue
-                self.frame_queue.enqueue(frame)
-                frame_updated = True
-                # print('Enqueued frame, current count is {} frames'.format(len(self.frame_queue._queue)))
+                    # Insert frame into frame queue
+                    self.frame_queue.enqueue(frame)
+                    frame_updated = True
+                    # print('Enqueued frame, current count is {} frames'.format(len(self.frame_queue._queue)))
             if frame_updated:
                 # Save frame for timelapse
                 if time.time() > (lastUpdatedTime + timelapseDelay):

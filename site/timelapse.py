@@ -94,7 +94,7 @@ class Timelapse:
                 num_frames = len(os.listdir(self.TIMELAPSE_IMAGE_PATH))
                 print(
                     "{0:d} Frames to process, expected to take {1:.2f} seconds".format(
-                        num_frames, num_frames * 0.10723
+                        num_frames, num_frames * 0.26583333
                     )
                 )
 
