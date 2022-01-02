@@ -9,24 +9,24 @@ from utils import *
 
 
 class ApsVideo:
-    def __init__(self, source='pi'):
+    def __init__(self, source="pi"):
         # source: "pi" for pi camera, "usb" for usb webcam. Must have fswebcam installed on host machine
         self.vs_started = True
         self.frame_lock = threading.Lock()
         self.frame_queue = Queue(max_size=10)
-        
-        if (source == 'pi'):
+
+        if source == "pi":
             self.source = 0
-        elif (source == 'usb'):
+        elif source == "usb":
             self.source = 1
         else:
-            print('No camera source entered, defaulting to pi camera')
+            print("No camera source entered, defaulting to pi camera")
             self.source = 0
 
         # Init video stream, allow camera to warmup
         self.frame_width_px = 1280
         self.frame_height_px = 720
-        self.vs = VideoStream(src=self.source).start()        
+        self.vs = VideoStream(src=self.source).start()
         self.vs.stream.set(3, self.frame_width_px)
         self.vs.stream.set(4, self.frame_height_px)
         time.sleep(0.5)
