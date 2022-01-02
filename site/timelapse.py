@@ -13,8 +13,9 @@ class Timelapse:
         self.timelapse_generation_in_process = False
         self.TIMELAPSE_IMAGE_PATH = "/share/aps/timelapse/images/"
         self.TIMELAPSE_VIDEO_PATH = "/share/aps/timelapse/videos/"
-        self.latest_timelapse_filename = "No timelapse generated yet"
-        
+        self.latest_timelapse_filename = "No timelapse video generated yet"
+                
+    def start_timelapse_video_generation(self):    
         # Start video generation
         gen_timelapse_thread = threading.Thread(target=self._generate_timelapse, kwargs={'debug_print': True},)
         gen_timelapse_thread.daemon = True
@@ -66,6 +67,7 @@ class Timelapse:
             print("Missing file detected. Created new file {}".format(filename_to_copy))
 
     def _generate_timelapse(self, debug_print=True):
+        return
         old_timelapse_video_filename = ""
         while (True):
             # Check if timelapse is currently being generated
@@ -119,7 +121,8 @@ class Timelapse:
                 else:
                     print("Cannot delete file as it does not exist")
                 
-                time.sleep(10)
+                # Wait 30 minutes between generating timelapse videos
+                time.sleep(60 * 30)
             else:
                 pass
             
