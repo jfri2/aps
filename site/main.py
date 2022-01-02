@@ -115,7 +115,7 @@ def screenshot():
 
         # Grab the current screen and save as a PNG with current timestamp in /tmp/
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        screenshot = vs.read()
+        screenshot = aps_video.get_screenshot()
         screenshot_name = "gemma-" + timestamp + ".png"
         cv2.imwrite(os.path.join(path, screenshot_name), screenshot)
     else:
