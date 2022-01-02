@@ -13,9 +13,7 @@ from utils import *
 
 
 class ApsVideo:
-    def __init__(
-        self
-    ):
+    def __init__(self):
         # source: 2 for pi camera, 0 for usb webcam. Must have fswebcam installed on host machine
         self.vs_started = True
         self.frame_lock = threading.Lock()
@@ -65,7 +63,7 @@ class ApsVideo:
         timelapseDelay = 60 * 2  # Seconds
         lastUpdatedTime = 0
         pi_frame = None
-        usb_frame = None        
+        usb_frame = None
         frame = None
         frame_updated = False
 
