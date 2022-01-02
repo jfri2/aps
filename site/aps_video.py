@@ -7,38 +7,38 @@ import collections
 from timelapse import Timelapse
 from utils import *
 
+
 class ApsVideo:
     def __init__(self):
         self.vs_started = True
         self.frame_lock = threading.Lock()
         self.frame_queue = Queue(max_size=10)
-        
+
         # Init video stream, allow camera to warmup
         self.vs = VideoStream(src=0).start()
         time.sleep(2.0)
-        
+
         # Init timelapse object
         self.timelapse = Timelapse()
-        
+
         # Start thread to generate frames
         generate_frame_thread = threading.Thread(target=self.generate_frame)
         generate_frame_thread.daemon = True
         generate_frame_thread.start()
-        
-        
+
     def generate_frame(self):
         timelapseDelay = 60 * 2  # Seconds
         lastUpdatedTime = 0
         frame = []
         frame_updated = False
-    
+
         while True:
             # Delay to limit framerate
             time.sleep(0.05)
             with self.frame_lock:
                 # Get frame from camera
                 frame = self.vs.read()
-                
+
                 # Write timestamp on top of frame
                 timestamp = datetime.datetime.now()
                 cv2.putText(
@@ -50,7 +50,7 @@ class ApsVideo:
                     (0, 0, 0),
                     4,
                 )
-                
+
                 cv2.putText(
                     frame,
                     timestamp.strftime("%a %d %b %Y %H:%M:%S"),
@@ -60,17 +60,17 @@ class ApsVideo:
                     (255, 255, 255),
                     2,
                 )
-                
+
                 # Insert frame into frame queue
                 self.frame_queue.enqueue(frame)
-                frame_updated = True                
+                frame_updated = True
                 # print('Enqueued frame, current count is {} frames'.format(len(self.frame_queue._queue)))
-            if frame_updated:                
+            if frame_updated:
                 # Save frame for timelapse
                 if time.time() > (lastUpdatedTime + timelapseDelay):
                     self.timelapse.save_frame(frame)
                     lastUpdatedTime = time.time()
-                
+
     def encode_frame(self):
         frame_updated = False
         last_encoded_image = None
@@ -81,9 +81,9 @@ class ApsVideo:
                     frame = self.frame_queue.dequeue()
                     frame_updated = True
                     # print('Dequeued frame, current count is {} frames'.format(len(self.frame_queue._queue)))
-                except: 
+                except:
                     frame_updated = False
-                    print('No data in frame_queue')
+                    print("No data in frame_queue")
             if frame_updated:
                 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
                 # encode the frame in JPEG format
@@ -94,16 +94,18 @@ class ApsVideo:
                     continue
                 # Copy new encoded image to last encoded image
                 last_encoded_image = encoded_image
-                
+
             # yield the output frame in the byte format
             if last_encoded_image is not None:
                 yield (
                     b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + bytearray(last_encoded_image) + b"\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n"
+                    + bytearray(last_encoded_image)
+                    + b"\r\n"
                 )
             else:
                 continue
-            
+
     def stop(self):
         # Release video stream pointer
         self.vs.stop()

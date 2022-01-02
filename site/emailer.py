@@ -8,13 +8,14 @@ from email.mime.text import MIMEText
 from email import encoders
 from email.utils import *
 
+
 class Emailer:
     def __init__(self):
         self.SMTP_SERVER = "smtp.gmail.com"
         self.SMTP_PORT = 587
         self.EMAIL_DATA_FILENAME = "/share/aps/site/data.json"
         with open(self.EMAIL_DATA_FILENAME) as jsonfile:
-            self.emails = json.load(jsonfile)        
+            self.emails = json.load(jsonfile)
 
     def sendmail(self, recipient, subject, content):
         # Create Headers

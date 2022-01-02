@@ -35,6 +35,7 @@ app = Flask(__name__, static_url_path="", static_folder="/share/aps/site/static"
 timelapse = Timelapse()
 timelapse.start_timelapse_video_generation()
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     # return the rendered template
@@ -96,7 +97,9 @@ def index():
 
 @app.route("/DOWNLOAD_TIMELAPSE")
 def download_timelapse():
-    timelapse_filename = timelapse.TIMELAPSE_VIDEO_PATH + timelapse.latest_timelapse_filename
+    timelapse_filename = (
+        timelapse.TIMELAPSE_VIDEO_PATH + timelapse.latest_timelapse_filename
+    )
     print(timelapse_filename)
     return send_file(timelapse_filename, as_attachment=True)
 
@@ -140,7 +143,9 @@ def screenshot():
 
 @app.route("/video_feed")
 def video_feed():
-    return Response(aps_video.encode_frame(), mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(
+        aps_video.encode_frame(), mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
 
 
 @app.route("/getCSV")
