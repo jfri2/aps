@@ -44,7 +44,9 @@ class Timelapse:
             filename = (
                 self.TIMELAPSE_IMAGE_PATH + "{:010d}".format(image_number) + ".jpg"
             )
-            cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+            # Convert image to grayscale to save space
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
             # print('File written: {}'.format(filename))
             image_number = image_number + 1
         else:
