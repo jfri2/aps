@@ -81,7 +81,6 @@ class Timelapse:
             print("Missing file detected. Created new file {}".format(filename_to_copy))
 
     def _generate_timelapse(self, debug_print=True):
-        return
         old_timelapse_video_filename = ""
         while True:
             # Check if timelapse is currently being generated

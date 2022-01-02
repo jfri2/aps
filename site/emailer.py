@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
-from email.utils import *
+from email.utils import formatdate
 
 
 class Emailer:

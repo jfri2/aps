@@ -21,7 +21,6 @@ import shutil
 from globals import *
 from emailer import Emailer
 from utils import *
-from csv import *
 from timelapse import *
 from aps_video import *
 
@@ -90,7 +89,7 @@ def index():
         info_ss13=info_ss13,
         info_p11=info_p11,
         info_p12=info_p12,
-        info_p13=info_p12,
+        info_p13=info_p13,
         lastVideoFileName=lastVideoFileName,
     )
 
@@ -111,33 +110,39 @@ def screenshot():
     if not os.path.exists(path):
         os.mkdir(path)
     if aps_video.vs_started:
-        content = "Hilo! John or Rachel just took a screenshot!"
+        try: 
+            content = "Hilo! John or Rachel just took a screenshot!"
+            # Grab the current screen and save as a PNG with current timestamp in /tmp/
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            screenshot_frame = aps_video.get_screenshot()
+            screenshot_name = "gemma-" + timestamp + ".png"
+            result = cv2.imwrite(os.path.join(path, screenshot_name), screenshot_frame)
+            if not result: 
+                print('Failed to save screenshot to {}'.format(os.path.join(path, screenshot_name)))
+            
+            # Send the email
+            emailer = Emailer()
+            recipient = emailer.emails["ToAddress1"]
+            subject = "GemmaCam Screenshot"
+            emailer.sendmail_attachment(
+                recipient=recipient,
+                subject=subject,
+                content=content,
+                filename=os.path.join(path, screenshot_name),
+            )
 
-        # Grab the current screen and save as a PNG with current timestamp in /tmp/
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        screenshot = aps_video.get_screenshot()
-        screenshot_name = "gemma-" + timestamp + ".png"
-        cv2.imwrite(os.path.join(path, screenshot_name), screenshot)
+            recipient = emailer.emails["ToAddress2"]
+            emailer.sendmail_attachment(
+                recipient=recipient,
+                subject=subject,
+                content=content,
+                filename=os.path.join(path, screenshot_name),
+            )  
+        except Exception as screenshot_exception:
+            print(screenshot_exception)
     else:
         content = "Video stream is not started, unable to take screenshot"
-
-    emailer = Emailer()
-    recipient = emailer.emails["ToAddress1"]
-    subject = "GemmaCam Screenshot"
-    emailer.sendmail_attachment(
-        recipient=recipient,
-        subject=subject,
-        content=content,
-        filename=os.path.join(path, screenshot_name),
-    )
-
-    recipient = emailer.emails["ToAddress2"]
-    emailer.sendmail_attachment(
-        recipient=recipient,
-        subject=subject,
-        content=content,
-        filename=os.path.join(path, screenshot_name),
-    )
+    
     return index()
 
 

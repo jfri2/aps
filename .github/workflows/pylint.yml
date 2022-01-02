@@ -28,4 +28,4 @@ jobs:
         echo "PYTHONPATH=./site" >> $GITHUB_ENV
     - name: Analysing the code with pylint
       run: |
-        pylint -E --rcfile ./site/.pylintrc $(find . -name "*.py" | xargs)
+        pylint -j 4 --disable=all --enable=E,W --disable=unspecified-encoding,unused-import,wildcard-import,unused-wildcard-import,broad-except,bare-except --rcfile .pylintrc $(find . -name "*.py" | xargs)
