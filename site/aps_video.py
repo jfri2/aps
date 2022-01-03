@@ -34,7 +34,9 @@ class ApsVideo:
         self.vs_usb = VideoStream(src=0, resolution=self.resolution).start()
 
         # Pi Camera
-        self.vs_pi = VideoStream(src=2, usePiCamera=True, resolution=self.resolution).start()
+        self.vs_pi = VideoStream(
+            src=2, usePiCamera=True, resolution=self.resolution
+        ).start()
 
         # Sleep to allow cameras to warm up
         time.sleep(0.1)
