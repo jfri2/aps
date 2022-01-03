@@ -25,20 +25,19 @@ class ApsVideo:
         self.frame_lock = threading.Lock()
         self.frame_queue = Queue(max_size=10)
 
-        # Init video stream, allow camera to warmup
-        self.frame_width_px = 1024
-        self.frame_height_px = 768
+        # Init video stream
+        self.frame_width_px = 960
+        self.frame_height_px = 720
+        self.resolution = (self.frame_width_px, self.frame_height_px)
 
-        self.vs_pi = VideoStream(src=0).start()
-        self.vs_pi.stream.set(3, self.frame_width_px)
-        self.vs_pi.stream.set(4, self.frame_height_px)
+        # USB Camera
+        self.vs_usb = VideoStream(src=0, resolution=self.resolution).start()
 
-        self.vs_usb = VideoStream(src=2).start()
-        self.vs_usb.stream.set(3, self.frame_width_px)
-        self.vs_usb.stream.set(4, self.frame_height_px)
+        # Pi Camera
+        self.vs_pi = VideoStream(src=2, usePiCamera=True, resolution=self.resolution).start()
 
         # Sleep to allow cameras to warm up
-        time.sleep(2)
+        time.sleep(0.1)
 
         # Init timelapse object
         self.timelapse = Timelapse()
