@@ -60,7 +60,3 @@ server {
 }
 
 ===
-
-To get multiple cameras to work needed to follow the answer here by Bill Armstrong: https://raspberrypi.stackexchange.com/questions/105358/raspberry-pi4-error-while-using-2-usb-cameras-vidioc-qbuf-invalid-argument
-
-===
