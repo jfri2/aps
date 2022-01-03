@@ -1,3 +1,10 @@
+/*
+ * logger.h
+ *
+ * Copyright (c) 2022 John Fritz
+ * MIT License, see license.md for full license text
+ */
+
 #ifndef LOGGER_H
 #define LOGGER_H
 

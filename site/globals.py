@@ -1,3 +1,8 @@
+# globals.py
+#
+# Copyright (c) 2022 John Fritz
+# MIT License, see license.md for full license text
+
 # Global Variables
 KILL_SWITCH_FILE_PATH = "/share/aps/csrc/pumps/killswitch.txt"
 TEST_PUMPS_FILE_PATH = "/share/aps/csrc/pumps/testpumps.txt"

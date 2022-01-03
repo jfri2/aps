@@ -1,3 +1,10 @@
+/*
+ * i2c.h
+ *
+ * Copyright (c) 2022 John Fritz
+ * MIT License, see license.md for full license text
+ */
+
 #ifndef I2C_H
 #define I2C_H
 

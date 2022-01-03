@@ -1,3 +1,10 @@
+/*
+ * main.c
+ *
+ * Copyright (c) 2022 John Fritz
+ * MIT License, see license.md for full license text
+ */
+
 #include "i2c.h"
 #include "aps_time.h"
 #include "logger.h"

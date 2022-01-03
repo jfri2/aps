@@ -1,3 +1,8 @@
+# main.py
+#
+# Copyright (c) 2022 John Fritz
+# MIT License, see license.md for full license text
+
 #!/usr/bin/python3
 # imports
 from flask import Response

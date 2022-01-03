@@ -1,3 +1,10 @@
+/*
+ * logger.c
+ *
+ * Copyright (c) 2022 John Fritz
+ * MIT License, see license.md for full license text
+ */
+
 // Includes
 #include "logger.h"
 

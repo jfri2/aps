@@ -1,4 +1,8 @@
-# timelapse
+# timelapse.py
+#
+# Copyright (c) 2022 John Fritz
+# MIT License, see license.md for full license text
+
 import datetime
 import time
 import os
@@ -136,7 +140,7 @@ class Timelapse:
                 else:
                     print("Cannot delete file as it does not exist")
 
-                # Wait 30 minutes between generating timelapse videos
-                time.sleep(60 * 30)
+                # Wait 5 minutes between generation of timelapse videos
+                time.sleep(60 * 5)
             else:
                 pass

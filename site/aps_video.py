@@ -1,3 +1,9 @@
+# aps_video.py
+#
+# Copyright (c) 2022 John Fritz
+# MIT License, see license.md for full license text
+
+
 from imutils.video import VideoStream
 import threading
 import time
@@ -60,7 +66,7 @@ class ApsVideo:
         return new_frame
 
     def generate_frame(self):
-        timelapseDelay = 60 * 2  # Seconds
+        timelapseDelay = 30  # Seconds
         lastUpdatedTime = 0
         pi_frame = None
         usb_frame = None

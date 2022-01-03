@@ -1,3 +1,10 @@
+/*
+ * aps_time.h
+ *
+ * Copyright (c) 2022 John Fritz
+ * MIT License, see license.md for full license text
+ */
+
 #ifndef APS_TIME_H
 #define APS_TIME_H
 
