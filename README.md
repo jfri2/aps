@@ -2,6 +2,9 @@
 #### APS (Automated Plant System) is a project that came out of the need to make sure indoor plants had enough water when nobody was home. The APS consists two software applications, one for a webserver and backend and another for data logging and automatic watering operations. The webserver/backend is written in python and located in the aps/site directory. The data logging and automatic watering application is written primarily in C and the source is located in the aps/csrc directory. These applications run on a raspberry Pi in the following hardware setup:
 ![alt text](https://github.com/jfri2/aps/blob/main/system_config.PNG)
 
+#### The APS webpage currently looks like this:
+![alt text](https://github.com/jfri2/aps/blob/main/webpage.PNG)
+
 ##### The APS currently does the following: 
 - Continuously monitors and logs the following parameters: 
     - Soil Moisture (three separate sensors)
