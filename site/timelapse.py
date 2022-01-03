@@ -24,7 +24,6 @@ class Timelapse:
         # Start video generation
         gen_timelapse_thread = threading.Thread(
             target=self._generate_timelapse,
-            kwargs={"debug_print": True},
         )
         gen_timelapse_thread.daemon = True
         gen_timelapse_thread.start()
@@ -84,7 +83,7 @@ class Timelapse:
             shutil.copyfile(filename_to_copy, new_filename)
             print("Missing file detected. Created new file {}".format(filename_to_copy))
 
-    def _generate_timelapse(self, debug_print=True):
+    def _generate_timelapse(self):
         old_timelapse_video_filename = ""
         while True:
             # Check if timelapse is currently being generated
@@ -108,14 +107,13 @@ class Timelapse:
                 temp_timelapse_filename = time_string + ".mp4"
                 fps = 20
                 ffmpeg_command = (
-                    "ffmpeg -f image2 -r {} -i ".format(fps)
+                    "ffmpeg -threads 1 -f image2 -r {} -i ".format(fps)
                     + self.TIMELAPSE_IMAGE_PATH
                     + "%10d.jpg -vcodec libx264 -crf 18 -pix_fmt yuv420p -y "
                     + self.TIMELAPSE_VIDEO_PATH
                     + temp_timelapse_filename
+                    + " > /dev/null 2>&1"
                 )
-                if debug_print:
-                    ffmpeg_command = ffmpeg_command + " > /dev/null 2>&1"
                 os.system(ffmpeg_command)
                 generationTime = time.time() - start_time
                 print(

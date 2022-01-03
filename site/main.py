@@ -39,7 +39,6 @@ app = Flask(__name__, static_url_path="", static_folder="/share/aps/site/static"
 timelapse = Timelapse()
 timelapse.start_timelapse_video_generation()
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     # return the rendered template
@@ -152,7 +151,7 @@ def screenshot():
     else:
         content = "Video stream is not started, unable to take screenshot"
 
-    return index()
+    return ('', 204)
 
 
 @app.route("/video_feed")
@@ -177,37 +176,37 @@ def getCSV():
 @app.route("/KILLSWITCHON")
 def buttonKILLSWITCHON():
     write_to_file(KILL_SWITCH_FILE_PATH, "1")
-    return index()
+    return ('', 204)
 
 
 @app.route("/KILLSWITCHOFF")
 def buttonKILLSWITCHOFF():
     write_to_file(KILL_SWITCH_FILE_PATH, "0")
-    return index()
+    return ('', 204)
 
 
 @app.route("/TESTPUMPS")
 def buttonTESTPUMPS():
     write_to_file(TEST_PUMPS_FILE_PATH, "1")
-    return index()
+    return ('', 204)
 
 
 @app.route("/WATER_1")
 def buttonWATER1():
     write_to_file(PUMP_1_FILE_PATH, "1")
-    return index()
+    return ('', 204)
 
 
 @app.route("/WATER_2")
 def buttonWATER2():
     write_to_file(PUMP_2_FILE_PATH, "1")
-    return index()
+    return ('', 204)
 
 
 @app.route("/WATER_3")
 def buttonWATER3():
     write_to_file(PUMP_3_FILE_PATH, "1")
-    return index()
+    return ('', 204)
 
 
 # check to see if this is the main thread of execution
