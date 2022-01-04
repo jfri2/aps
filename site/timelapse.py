@@ -84,28 +84,34 @@ class Timelapse:
             )
             shutil.copyfile(filename_to_copy, new_filename)
             print("Missing file detected. Created new file {}".format(filename_to_copy))
-            
+
     def _generate_timelapse_progress(self, num_frames):
-        self.frame_generation_time = 0.35      # Seconds
+        self.frame_generation_time = 0.35  # Seconds
         self.timelapse_progress_enable = True
         print(
             "{0:d} Frames to process, expected to take {1:.2f} seconds".format(
                 num_frames, num_frames * self.frame_generation_time
             )
         )
-        self.generate_timelapse_progress_thread = threading.Thread(target=self._generate_timelapse_progress_exec, args=(num_frames,))
+        self.generate_timelapse_progress_thread = threading.Thread(
+            target=self._generate_timelapse_progress_exec, args=(num_frames,)
+        )
         self.generate_timelapse_progress_thread.daemon = True
         self.generate_timelapse_progress_thread.start()
-        
+
     def _generate_timelapse_progress_exec(self, num_frames):
         start_time = time.time()
         expected_end_time = start_time + (num_frames * self.frame_generation_time)
         self.timelapse_progress = 0
-        while ((time.time() <= expected_end_time) and (self.timelapse_progress_enable == True)):
-            self.timelapse_progress = int(((time.time() - start_time) / (expected_end_time - start_time)) * 100)
+        while (time.time() <= expected_end_time) and (
+            self.timelapse_progress_enable == True
+        ):
+            self.timelapse_progress = int(
+                ((time.time() - start_time) / (expected_end_time - start_time)) * 100
+            )
             if self.timelapse_progress >= 99:
                 self.timelapse_progress = 99
-            print('Next timelapse is {}% complete'.format(self.timelapse_progress))
+            print("Next timelapse is {}% complete".format(self.timelapse_progress))
             time.sleep(5)
         self.timelapse_progress = 100
 

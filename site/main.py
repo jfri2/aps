@@ -97,7 +97,7 @@ def index():
         info_p12=info_p12,
         info_p13=info_p13,
         last_video_fileName=last_video_fileName,
-        timelapse_progress=timelapse_progress
+        timelapse_progress=timelapse_progress,
     )
 
 
