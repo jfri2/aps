@@ -76,7 +76,7 @@ class ApsVideo:
 
         while True:
             # Delay to limit framerate
-            time.sleep(0.05)
+            # time.sleep(0.05)
             with self.frame_lock:
                 # Get frame from camera
                 pi_frame = self.vs_pi.read()

@@ -57,7 +57,8 @@ def index():
     info_p11 = ""
     info_p12 = ""
     info_p13 = ""
-    lastVideoFileName = timelapse.latest_timelapse_filename
+    last_video_fileName = timelapse.latest_timelapse_filename
+    timelapse_progress = timelapse.timelapse_progress
 
     # Populate fields from latest csv file for webpage
     with open(get_csv_filename(), "rb") as f:
@@ -95,7 +96,8 @@ def index():
         info_p11=info_p11,
         info_p12=info_p12,
         info_p13=info_p13,
-        lastVideoFileName=lastVideoFileName,
+        last_video_fileName=last_video_fileName,
+        timelapse_progress=timelapse_progress
     )
 
 
