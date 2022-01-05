@@ -21,6 +21,7 @@ class Timelapse:
         self.latest_timelapse_filename = "No timelapse video generated yet"
         self.timelapse_progress = 0
         self.timelapse_progress_enable = True
+        self.frame_generation_time = 0.35  # Seconds
 
     def start_timelapse_video_generation(self):
         # Start video generation
@@ -85,19 +86,18 @@ class Timelapse:
             shutil.copyfile(filename_to_copy, new_filename)
             print("Missing file detected. Created new file {}".format(filename_to_copy))
 
-    def _generate_timelapse_progress(self, num_frames):
-        self.frame_generation_time = 0.35  # Seconds
+    def _generate_timelapse_progress(self, num_frames):        
         self.timelapse_progress_enable = True
         print(
             "{0:d} Frames to process, expected to take {1:.2f} seconds".format(
                 num_frames, num_frames * self.frame_generation_time
             )
         )
-        self.generate_timelapse_progress_thread = threading.Thread(
+        generate_timelapse_progress_thread = threading.Thread(
             target=self._generate_timelapse_progress_exec, args=(num_frames,)
         )
-        self.generate_timelapse_progress_thread.daemon = True
-        self.generate_timelapse_progress_thread.start()
+        generate_timelapse_progress_thread.daemon = True
+        generate_timelapse_progress_thread.start()
 
     def _generate_timelapse_progress_exec(self, num_frames):
         start_time = time.time()
@@ -132,7 +132,7 @@ class Timelapse:
                 timestamp = datetime.datetime.now()
                 time_string = timestamp.strftime("%Y-%m-%d_%H-%M-%S")
                 temp_timelapse_filename = time_string + ".mp4"
-                fps = 20
+                fps = 60
                 ffmpeg_command = (
                     "ffmpeg -f image2 -r {} -i ".format(fps)
                     + self.TIMELAPSE_IMAGE_PATH

@@ -5,6 +5,7 @@
 
 #!/usr/bin/python3
 # imports
+import faulthandler
 from flask import Response
 from flask import Flask, url_for
 from flask import render_template
@@ -28,6 +29,11 @@ from emailer import Emailer
 from utils import *
 from timelapse import *
 from aps_video import *
+
+faulthandler.enable()
+
+# Sleep to allow resources to free up on launch from boot
+time.sleep(2)     
 
 # Start video stream
 aps_video = ApsVideo()
