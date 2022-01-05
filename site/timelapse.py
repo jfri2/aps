@@ -86,7 +86,7 @@ class Timelapse:
             shutil.copyfile(filename_to_copy, new_filename)
             print("Missing file detected. Created new file {}".format(filename_to_copy))
 
-    def _generate_timelapse_progress(self, num_frames):        
+    def _generate_timelapse_progress(self, num_frames):
         self.timelapse_progress_enable = True
         print(
             "{0:d} Frames to process, expected to take {1:.2f} seconds".format(

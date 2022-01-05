@@ -19,7 +19,7 @@ from utils import *
 
 
 class ApsVideo:
-    def __init__(self): 
+    def __init__(self):
         # source: 2 for pi camera, 0 for usb webcam. Must have fswebcam installed on host machine
         self.vs_started = True
         self.frame_lock = threading.Lock()
@@ -32,9 +32,9 @@ class ApsVideo:
 
         # USB Camera
         self.vs_usb = VideoStream(src=0, resolution=self.resolution).start()
-        
+
         # Sleep to allow camera to warm up
-        time.sleep(2)        
+        time.sleep(2)
 
         # Pi Camera
         self.vs_pi = VideoStream(

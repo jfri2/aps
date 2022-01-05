@@ -33,7 +33,7 @@ from aps_video import *
 faulthandler.enable()
 
 # Sleep to allow resources to free up on launch from boot
-time.sleep(2)     
+time.sleep(2)
 
 # Start video stream
 aps_video = ApsVideo()
